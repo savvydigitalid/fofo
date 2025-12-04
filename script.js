@@ -339,6 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.renameIdea = renameIdea;
     window.sortIdeas = sortIdeas;
     window.filterIdeas = filterIdeas;
+    window.exportIdeas = exportIdeas;
+    window.importIdeas = importIdeas;
     
     // Aktifkan filter 'all' saat pertama kali dimuat
     filterIdeas('all'); 
