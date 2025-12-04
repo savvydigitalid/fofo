@@ -59,28 +59,9 @@ const getFilteredAndSortedIdeas = () => {
 const filterIdeas = (filter) => {
     currentFilter = filter;
     
-    // Kelas untuk status aktif
-    const activeClasses = ['bg-indigo-500', 'text-white', 'hover:bg-indigo-600'];
-    // Kelas untuk status tidak aktif
-    const inactiveClasses = ['bg-white', 'border', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-200'];
-
-    // Update style tombol yang aktif
-    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-        // Hapus kelas aktif dari semua tombol
-        activeClasses.forEach(c => btn.classList.remove(c));
-        // Tambahkan kelas tidak aktif ke semua tombol
-        inactiveClasses.forEach(c => btn.classList.add(c));
-    });
-
-    const activeBtn = document.getElementById(`filter-${filter}`);
-    if (activeBtn) {
-        // Aktifkan tombol yang diklik
-        // Hapus kelas tidak aktif
-        inactiveClasses.forEach(c => activeBtn.classList.remove(c));
-        // Tambahkan kelas aktif
-        activeClasses.forEach(c => activeBtn.classList.add(c));
-    }
-
+    // --- LOGIC PENGGANTIAN WARNA TOMBOL SEMENTARA DINONAKTIFKAN ---
+    // --- Tombol tidak akan berubah warna, tapi harus berfungsi ---
+    
     renderIdeas();
 };
 
