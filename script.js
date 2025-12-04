@@ -158,7 +158,7 @@ const renderIdeas = () => {
                 <div class="flex flex-col">
                     <h3 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
                         <span>${idea.title}</span>
-                        <button onclick="renameIdea(${index})" class="text-gray-400 hover:text-indigo-500 transition duration-150">
+                        <button onclick="editIdea(${index})" class="text-gray-400 hover:text-indigo-500 transition duration-150">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-7.586 7.586a1 1 0 000 1.414L10.586 16l-3 3H3a1 1 0 01-1-1v-4L7.586 11.172z" />
                             </svg>
@@ -222,17 +222,38 @@ const getActionButton = (currentStatus, index) => {
 
 // === 6. HANDLERS LAMA ===
 
-const renameIdea = (index) => {
+// GANTI FUNGSI renameIdea DENGAN INI:
+const editIdea = (index) => {
     const idea = getFilteredAndSortedIdeas()[index];
-    const newTitle = prompt("Ganti Judul Ide:", idea.title);
+    let originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact && i.effort === idea.effort);
 
-    if (newTitle !== null && newTitle.trim() !== "" && newTitle !== idea.title) {
-        const originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact);
-        if (originalIndex !== -1) {
-            ideas[originalIndex].title = newTitle.trim();
-            saveIdeas();
-            renderIdeas();
-        }
+    // Prompt untuk Judul
+    const newTitle = prompt("Edit Judul Ide:", idea.title);
+    if (newTitle !== null && newTitle.trim() === "") {
+        alert("Judul tidak boleh kosong.");
+        return;
+    }
+    
+    // Prompt untuk Impact
+    const newImpactStr = prompt(`Edit Skor Impact (1-5) untuk "${newTitle || idea.title}":`, idea.impact);
+    const newImpact = parseInt(newImpactStr);
+    
+    // Prompt untuk Effort
+    const newEffortStr = prompt(`Edit Skor Effort (1-5) untuk "${newTitle || idea.title}":`, idea.effort);
+    const newEffort = parseInt(newEffortStr);
+
+    // Validasi input skor
+    if (isNaN(newImpact) || isNaN(newEffort) || newImpact < 1 || newImpact > 5 || newEffort < 1 || newEffort > 5) {
+        alert("Skor Impact dan Effort harus berupa angka antara 1 sampai 5.");
+        return;
+    }
+
+    if (originalIndex !== -1) {
+        ideas[originalIndex].title = newTitle.trim() || idea.title;
+        ideas[originalIndex].impact = newImpact;
+        ideas[originalIndex].effort = newEffort;
+        saveIdeas();
+        renderIdeas(); // Dopamine Spark: Lihat skor dan label langsung berubah!
     }
 };
 
@@ -336,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose functions to window
     window.deleteIdea = deleteIdea;
     window.updateStatus = updateStatus;
-    window.renameIdea = renameIdea;
+    window.editIdea = editIdea;
     window.sortIdeas = sortIdeas;
     window.filterIdeas = filterIdeas;
     window.exportIdeas = exportIdeas;
