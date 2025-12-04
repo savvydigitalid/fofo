@@ -1,5 +1,5 @@
 // =======================================================
-// FOFo V1.3: LOCALSTORAGE, KANBAN STATUS, RENAME, FILTER & SORT (STABLE)
+// FOFo V1.6: FINAL STABLE CODE (Full CRUD, Kanban, Filter/Sort, Import/Export, Total Score)
 // =======================================================
 
 let ideas = [];
@@ -101,7 +101,8 @@ const getPriorityLabel = (impact, effort) => {
 
     return { label, color, netScore };
 };
-// === 2.5 TOTAL SCORE LOGIC BARU ===
+
+// === 3.5 TOTAL SCORE LOGIC ===
 
 const calculateAndRenderTotalScore = () => {
     // Hanya hitung ide yang belum Done, agar hasilnya lebih relevan
@@ -118,13 +119,14 @@ const calculateAndRenderTotalScore = () => {
     
     // Memberi warna berdasarkan kondisi (Dopamine Spark!)
     if (totalNetScore > 5) {
-        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-green-500 text-white'; // Sehat
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-green-500 text-white'; 
     } else if (totalNetScore >= 0) {
-        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-yellow-500 text-white'; // Hati-hati
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-yellow-500 text-white'; 
     } else {
-        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-red-500 text-white'; // Bahaya
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-red-500 text-white'; 
     }
 };
+
 // === 4. STATUS KANBAN LOGIC ===
 
 const getStatusStyle = (status) => {
@@ -143,7 +145,6 @@ const getStatusStyle = (status) => {
 };
 
 const updateStatus = (index, newStatus) => {
-    // Cari index berdasarkan ide asli sebelum disort/filter
     const ideaToUpdate = getFilteredAndSortedIdeas()[index];
     const originalIndex = ideas.findIndex(idea => idea.title === ideaToUpdate.title && idea.impact === ideaToUpdate.impact);
 
@@ -218,18 +219,12 @@ const renderIdeas = () => {
         listContainer.appendChild(ideaCard);
     });
     
+    // Panggil fungsi total score di sini!
+    calculateAndRenderTotalScore();
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
-// ... (di akhir fungsi renderIdeas)
 
-    listContainer.appendChild(ideaCard);
-});
-
-// Panggil fungsi total score di sini!
-calculateAndRenderTotalScore();
-
-window.scrollTo({ top: 0, behavior: 'smooth' });
-};
 // Fungsi yang menentukan tombol aksi apa yang harus ditampilkan
 const getActionButton = (currentStatus, index) => {
     switch (currentStatus) {
@@ -254,27 +249,22 @@ const getActionButton = (currentStatus, index) => {
 
 // === 6. HANDLERS LAMA ===
 
-// GANTI FUNGSI renameIdea DENGAN INI:
 const editIdea = (index) => {
     const idea = getFilteredAndSortedIdeas()[index];
     let originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact && i.effort === idea.effort);
 
-    // Prompt untuk Judul
     const newTitle = prompt("Edit Judul Ide:", idea.title);
     if (newTitle !== null && newTitle.trim() === "") {
         alert("Judul tidak boleh kosong.");
         return;
     }
     
-    // Prompt untuk Impact
     const newImpactStr = prompt(`Edit Skor Impact (1-5) untuk "${newTitle || idea.title}":`, idea.impact);
     const newImpact = parseInt(newImpactStr);
     
-    // Prompt untuk Effort
     const newEffortStr = prompt(`Edit Skor Effort (1-5) untuk "${newTitle || idea.title}":`, idea.effort);
     const newEffort = parseInt(newEffortStr);
 
-    // Validasi input skor
     if (isNaN(newImpact) || isNaN(newEffort) || newImpact < 1 || newImpact > 5 || newEffort < 1 || newEffort > 5) {
         alert("Skor Impact dan Effort harus berupa angka antara 1 sampai 5.");
         return;
@@ -285,7 +275,7 @@ const editIdea = (index) => {
         ideas[originalIndex].impact = newImpact;
         ideas[originalIndex].effort = newEffort;
         saveIdeas();
-        renderIdeas(); // Dopamine Spark: Lihat skor dan label langsung berubah!
+        renderIdeas(); 
     }
 };
 
@@ -325,6 +315,7 @@ const deleteIdea = (index) => {
         renderIdeas(); 
     }
 };
+
 // === 6.5 DATA SAFETY HANDLERS (IMPORT/EXPORT) ===
 
 const exportIdeas = () => {
@@ -376,6 +367,7 @@ const importIdeas = (event) => {
     };
     reader.readAsText(file);
 };
+
 // === 7. INIT (Start Apps) ===
 
 document.addEventListener('DOMContentLoaded', () => {
