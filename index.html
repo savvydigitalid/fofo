@@ -58,7 +58,30 @@
             </form>
         </div>
 
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Daftar Ide (Total <span id="idea-count">0</span>)</h2>
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">Daftar Ide (Total <span id="idea-count">0</span>)</h2>
+        
+        <div class="flex flex-wrap gap-2 mb-6 p-4 bg-gray-100 rounded-lg">
+            <span class="text-sm font-semibold text-gray-700 mr-2">Sortir:</span>
+            <button onclick="sortIdeas('score')" class="text-sm px-3 py-1 bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition duration-150">
+                Prioritas (Net Score) 🏅
+            </button>
+            <span class="text-sm font-semibold text-gray-700 mx-2 ml-4">Filter:</span>
+            <button onclick="filterIdeas('all')" id="filter-all" class="text-sm px-3 py-1 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition duration-150">
+                Semua Ide
+            </button>
+            <button onclick="filterIdeas('parked')" id="filter-parked" class="text-sm px-3 py-1 bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition duration-150">
+                Parked 🅿️
+            </button>
+            <button onclick="filterIdeas('validated')" id="filter-validated" class="text-sm px-3 py-1 bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition duration-150">
+                Validated ✅
+            </button>
+            <button onclick="filterIdeas('building')" id="filter-building" class="text-sm px-3 py-1 bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition duration-150">
+                Building 🔨
+            </button>
+            <button onclick="filterIdeas('done')" id="filter-done" class="text-sm px-3 py-1 bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition duration-150">
+                DONE! 🎉
+            </button>
+        </div>
         <div id="idea-list" class="space-y-4">
             </div>
 
