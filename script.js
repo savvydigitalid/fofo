@@ -101,7 +101,30 @@ const getPriorityLabel = (impact, effort) => {
 
     return { label, color, netScore };
 };
+// === 2.5 TOTAL SCORE LOGIC BARU ===
 
+const calculateAndRenderTotalScore = () => {
+    // Hanya hitung ide yang belum Done, agar hasilnya lebih relevan
+    const activeIdeas = ideas.filter(idea => idea.status !== 'done');
+    
+    const totalImpact = activeIdeas.reduce((sum, idea) => sum + idea.impact, 0);
+    const totalEffort = activeIdeas.reduce((sum, idea) => sum + idea.effort, 0);
+    const totalNetScore = totalImpact - totalEffort;
+
+    const scoreElement = document.getElementById('total-score');
+    if (!scoreElement) return;
+
+    scoreElement.textContent = `Total Score: ${totalNetScore}`;
+    
+    // Memberi warna berdasarkan kondisi (Dopamine Spark!)
+    if (totalNetScore > 5) {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-green-500 text-white'; // Sehat
+    } else if (totalNetScore >= 0) {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-yellow-500 text-white'; // Hati-hati
+    } else {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-red-500 text-white'; // Bahaya
+    }
+};
 // === 4. STATUS KANBAN LOGIC ===
 
 const getStatusStyle = (status) => {
@@ -197,7 +220,16 @@ const renderIdeas = () => {
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+// ... (di akhir fungsi renderIdeas)
 
+    listContainer.appendChild(ideaCard);
+});
+
+// Panggil fungsi total score di sini!
+calculateAndRenderTotalScore();
+
+window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 // Fungsi yang menentukan tombol aksi apa yang harus ditampilkan
 const getActionButton = (currentStatus, index) => {
     switch (currentStatus) {
