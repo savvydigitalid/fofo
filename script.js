@@ -272,7 +272,57 @@ const deleteIdea = (index) => {
         renderIdeas(); 
     }
 };
+// === 6.5 DATA SAFETY HANDLERS (IMPORT/EXPORT) ===
 
+const exportIdeas = () => {
+    if (ideas.length === 0) {
+        alert("Tidak ada ide untuk di-export!");
+        return;
+    }
+
+    const dataStr = JSON.stringify(ideas, null, 2); 
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fofo_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log("Data berhasil di-export.");
+    alert("Semua data ide berhasil di-download sebagai file .json! 💾");
+};
+
+const importIdeas = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (Array.isArray(importedData) && importedData.every(item => item.title && item.impact !== undefined)) {
+                
+                if (confirm(`Yakin ingin mengimpor ${importedData.length} ide? Data yang ada sekarang akan DITIMPA.`)) {
+                    ideas = importedData;
+                    saveIdeas();
+                    renderIdeas();
+                    alert("Data berhasil di-import! 🎉");
+                }
+            } else {
+                alert("Format file .json tidak valid untuk FoFo.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Gagal memproses file. Pastikan file JSON valid.");
+        }
+    };
+    reader.readAsText(file);
+};
 // === 7. INIT (Start Apps) ===
 
 document.addEventListener('DOMContentLoaded', () => {
