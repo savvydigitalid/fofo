@@ -1,5 +1,5 @@
 // =======================================================
-// FOFo V1.1: LOGIC LOCALSTORAGE & KANBAN STATUS
+// FOFo V1.2: LOGIC LOCALSTORAGE, KANBAN STATUS, & RENAME
 // =======================================================
 
 let ideas = [];
@@ -9,7 +9,6 @@ let ideas = [];
 const loadIdeas = () => {
     const storedIdeas = localStorage.getItem('fofoIdeas');
     if (storedIdeas) {
-        // Pastikan ide-ide lama yang belum punya status, defaultnya adalah 'parked'
         ideas = JSON.parse(storedIdeas).map(idea => ({
             ...idea,
             status: idea.status || 'parked' 
@@ -31,13 +30,13 @@ const getPriorityLabel = (impact, effort) => {
 
     if (netScore >= 4) {
         label = 'QUICK WIN! ⚡️';
-        color = 'bg-green-500'; // Dopamine Green
+        color = 'bg-green-500';
     } else if (netScore >= 0) {
         label = 'BIG BET 🧠';
-        color = 'bg-indigo-500'; // Dopamine Blue
+        color = 'bg-indigo-500';
     } else {
         label = 'TIME WASTER 🗑️';
-        color = 'bg-red-500'; // Dopamine Red
+        color = 'bg-red-500';
     }
 
     return { label, color, netScore };
@@ -60,7 +59,6 @@ const getStatusStyle = (status) => {
     }
 };
 
-// Fungsi utama untuk mengubah status ide
 const updateStatus = (index, newStatus) => {
     if (ideas[index]) {
         ideas[index].status = newStatus;
@@ -89,7 +87,6 @@ const renderIdeas = () => {
         const status = getStatusStyle(idea.status);
         
         const ideaCard = document.createElement('div');
-        // Border card berdasarkan status untuk visual progress
         const statusBorder = idea.status === 'done' ? 'border-l-4 border-green-500' : 
                              idea.status === 'building' ? 'border-l-4 border-indigo-500' :
                              'border-l-4 border-gray-300';
@@ -100,7 +97,14 @@ const renderIdeas = () => {
         ideaCard.innerHTML = `
             <div class="flex justify-between items-start mb-3">
                 <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-gray-800">${idea.title}</h3>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
+                        <span>${idea.title}</span>
+                        <button onclick="renameIdea(${index})" class="text-gray-400 hover:text-indigo-500 transition duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-7.586 7.586a1 1 0 000 1.414L10.586 16l-3 3H3a1 1 0 01-1-1v-4L7.586 11.172z" />
+                            </svg>
+                        </button>
+                    </h3>
                     <span class="text-xs font-medium uppercase ${status.color} px-2 py-0.5 rounded-full mt-1 inline-block w-fit">
                         ${status.text}
                     </span>
@@ -132,7 +136,6 @@ const renderIdeas = () => {
         listContainer.appendChild(ideaCard);
     });
     
-    // Scroll ke atas setelah render (memicu dopamine spark)
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -150,15 +153,32 @@ const getActionButton = (currentStatus, index) => {
                         Move to Building 🔨
                     </button>`;
         case 'building':
-            return ''; // Tombol 'Mark as Done' sudah di luar switch
+            return ''; 
         case 'done':
-            return ''; // Tidak ada tombol selain Archive
+            return '';
         default:
             return '';
     }
 };
 
-// === 5. FORM HANDLER ===
+
+// === 5. RENAME HANDLER BARU ===
+
+const renameIdea = (index) => {
+    const idea = ideas[index];
+    // Gunakan prompt() JavaScript untuk mengambil input baru
+    const newTitle = prompt("Ganti Judul Ide:", idea.title);
+
+    if (newTitle !== null && newTitle.trim() !== "" && newTitle !== idea.title) {
+        ideas[index].title = newTitle.trim();
+        saveIdeas();
+        renderIdeas();
+        // Dopamine Spark kecil: notifikasi sukses rename
+        console.log(`Judul ide berhasil diubah menjadi: ${newTitle.trim()}`);
+    }
+};
+
+// === 6. FORM & DELETE HANDLER LAMA ===
 
 const handleFormSubmit = (event) => {
     event.preventDefault(); 
@@ -176,17 +196,15 @@ const handleFormSubmit = (event) => {
         title: title,
         impact: impact,
         effort: effort,
-        status: 'parked' // Status awal selalu 'parked'
+        status: 'parked'
     };
 
     ideas.unshift(newIdea); 
     saveIdeas(); 
-    renderIdeas(); // Panggil render yang sekarang sudah termasuk scroll ke atas
+    renderIdeas(); 
     
     document.getElementById('idea-form').reset();
 };
-
-// === 6. ACTION HANDLERS ===
 
 const deleteIdea = (index) => {
     if (confirm(`Yakin mau mengarsipkan/membunuh ide "${ideas[index].title}"?`)) {
@@ -206,7 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', handleFormSubmit); 
     }
     
-    // Expose deleteIdea dan updateStatus ke window agar bisa dipanggil dari onclick
+    // Expose functions to window
     window.deleteIdea = deleteIdea;
     window.updateStatus = updateStatus;
+    window.renameIdea = renameIdea; // Tambahkan fungsi rename ke window
 });
