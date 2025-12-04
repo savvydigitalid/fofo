@@ -59,24 +59,26 @@ const getFilteredAndSortedIdeas = () => {
 const filterIdeas = (filter) => {
     currentFilter = filter;
     
-    // Kelas untuk status aktif dan tidak aktif
-    const activeClasses = 'bg-indigo-500 text-white hover:bg-indigo-600';
-    const inactiveClasses = 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-200';
+    // Kelas untuk status aktif
+    const activeClasses = ['bg-indigo-500', 'text-white', 'hover:bg-indigo-600'];
+    // Kelas untuk status tidak aktif
+    const inactiveClasses = ['bg-white', 'border', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-200'];
 
     // Update style tombol yang aktif
     document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-        // Deaktivasi semua: Hapus kelas aktif, tambahkan kelas tidak aktif
-        btn.className = btn.className.replace(activeClasses, '').trim();
-        if (!btn.className.includes(inactiveClasses)) {
-             btn.className += ` ${inactiveClasses}`;
-        }
+        // Hapus kelas aktif dari semua tombol
+        activeClasses.forEach(c => btn.classList.remove(c));
+        // Tambahkan kelas tidak aktif ke semua tombol
+        inactiveClasses.forEach(c => btn.classList.add(c));
     });
 
     const activeBtn = document.getElementById(`filter-${filter}`);
     if (activeBtn) {
-        // Aktivasi tombol yang diklik: Hapus kelas tidak aktif, tambahkan kelas aktif
-        activeBtn.className = activeBtn.className.replace(inactiveClasses, '').trim();
-        activeBtn.className += ` ${activeClasses}`;
+        // Aktifkan tombol yang diklik
+        // Hapus kelas tidak aktif
+        inactiveClasses.forEach(c => activeBtn.classList.remove(c));
+        // Tambahkan kelas aktif
+        activeClasses.forEach(c => activeBtn.classList.add(c));
     }
 
     renderIdeas();
