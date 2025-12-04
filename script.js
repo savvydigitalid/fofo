@@ -1,10 +1,12 @@
 // =======================================================
-// FOFo V1.2: LOGIC LOCALSTORAGE, KANBAN STATUS, & RENAME
+// FOFo V1.3: LOCALSTORAGE, KANBAN STATUS, RENAME, FILTER & SORT
 // =======================================================
 
 let ideas = [];
+let currentFilter = 'all'; // Filter default: Tampilkan semua
+let currentSort = 'default'; // Sort default: Urutan input
 
-// === 1. LOCALSTORAGE HANDLERS ===
+// === 1. LOCALSTORAGE & PERSISTENCE ===
 
 const loadIdeas = () => {
     const storedIdeas = localStorage.getItem('fofoIdeas');
@@ -21,10 +23,68 @@ const saveIdeas = () => {
     localStorage.setItem('fofoIdeas', JSON.stringify(ideas));
 };
 
-// === 2. PRIORITAS & DOPAMINE SPARK LOGIC (Scoring) ===
+// === 2. FILTER & SORT LOGIC BARU ===
+
+const getNetScore = (impact, effort) => impact - effort;
+
+// Fungsi utama yang mengurus filtering dan sorting
+const getFilteredAndSortedIdeas = () => {
+    let filteredIdeas = ideas;
+    
+    // 2a. Filtering
+    if (currentFilter !== 'all') {
+        filteredIdeas = ideas.filter(idea => idea.status === currentFilter);
+    }
+
+    // 2b. Sorting
+    let sortedIdeas = [...filteredIdeas]; // Duplikat array agar yang asli tidak berubah
+
+    if (currentSort === 'score') {
+        sortedIdeas.sort((a, b) => {
+            const scoreA = getNetScore(a.impact, a.effort);
+            const scoreB = getNetScore(b.impact, b.effort);
+            return scoreB - scoreA; // Urutkan dari skor tertinggi
+        });
+    } else {
+        // Sort default (berdasarkan status)
+        const order = ['parked', 'validated', 'building', 'done'];
+        sortedIdeas.sort((a, b) => {
+            return order.indexOf(a.status) - order.indexOf(b.status);
+        });
+    }
+
+    return sortedIdeas;
+};
+
+// Fungsi yang dipanggil saat tombol Filter ditekan
+const filterIdeas = (filter) => {
+    currentFilter = filter;
+    
+    // Update style tombol yang aktif
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.className = btn.className.replace('bg-indigo-500 text-white', 'bg-white border border-gray-300 text-gray-700');
+        btn.className = btn.className.replace('hover:bg-indigo-600', 'hover:bg-gray-200');
+    });
+
+    const activeBtn = document.getElementById(`filter-${filter}`);
+    if (activeBtn) {
+        activeBtn.className = activeBtn.className.replace('bg-white border border-gray-300 text-gray-700', 'bg-indigo-500 text-white');
+        activeBtn.className = activeBtn.className.replace('hover:bg-gray-200', 'hover:bg-indigo-600');
+    }
+
+    renderIdeas();
+};
+
+// Fungsi yang dipanggil saat tombol Sort ditekan
+const sortIdeas = (sort) => {
+    currentSort = sort;
+    renderIdeas();
+};
+
+// === 3. PRIORITAS & DOPAMINE SPARK LOGIC (Scoring) ===
 
 const getPriorityLabel = (impact, effort) => {
-    const netScore = impact - effort;
+    const netScore = getNetScore(impact, effort);
     let label = '';
     let color = '';
 
@@ -42,7 +102,7 @@ const getPriorityLabel = (impact, effort) => {
     return { label, color, netScore };
 };
 
-// === 3. STATUS KANBAN LOGIC (Visual Progress) ===
+// === 4. STATUS KANBAN LOGIC (Visual Progress) ===
 
 const getStatusStyle = (status) => {
     switch (status) {
@@ -60,29 +120,30 @@ const getStatusStyle = (status) => {
 };
 
 const updateStatus = (index, newStatus) => {
-    if (ideas[index]) {
-        ideas[index].status = newStatus;
+    // Cari index berdasarkan ide asli sebelum disort/filter
+    const ideaToUpdate = getFilteredAndSortedIdeas()[index];
+    const originalIndex = ideas.findIndex(idea => idea.title === ideaToUpdate.title && idea.impact === ideaToUpdate.impact);
+
+    if (originalIndex !== -1) {
+        ideas[originalIndex].status = newStatus;
         saveIdeas();
         renderIdeas();
     }
 };
 
-// === 4. RENDERING KE HTML ===
+// === 5. RENDERING KE HTML ===
 
 const renderIdeas = () => {
     const listContainer = document.getElementById('idea-list');
     const countElement = document.getElementById('idea-count');
     
-    // Sort ideas: Parked/Validated/Building di atas, Done di bawah
-    const sortedIdeas = ideas.sort((a, b) => {
-        const order = ['parked', 'validated', 'building', 'done'];
-        return order.indexOf(a.status) - order.indexOf(b.status);
-    });
+    // Ambil data yang sudah difilter dan disort
+    const ideasToRender = getFilteredAndSortedIdeas();
 
     listContainer.innerHTML = '';
-    countElement.textContent = ideas.length; 
+    countElement.textContent = ideasToRender.length; 
 
-    sortedIdeas.forEach((idea, index) => {
+    ideasToRender.forEach((idea, index) => { // Gunakan index dari array yang sudah difilter
         const priority = getPriorityLabel(idea.impact, idea.effort);
         const status = getStatusStyle(idea.status);
         
@@ -93,7 +154,6 @@ const renderIdeas = () => {
 
         ideaCard.className = `card bg-white p-5 rounded-xl shadow-md ${statusBorder}`;
         
-        // Template HTML untuk setiap kartu ide
         ideaCard.innerHTML = `
             <div class="flex justify-between items-start mb-3">
                 <div class="flex flex-col">
@@ -161,24 +221,23 @@ const getActionButton = (currentStatus, index) => {
     }
 };
 
-
-// === 5. RENAME HANDLER BARU ===
+// === 6. HANDLERS LAMA ===
 
 const renameIdea = (index) => {
-    const idea = ideas[index];
-    // Gunakan prompt() JavaScript untuk mengambil input baru
+    // Gunakan index dari array yang sudah difilter untuk mendapatkan ide
+    const idea = getFilteredAndSortedIdeas()[index];
     const newTitle = prompt("Ganti Judul Ide:", idea.title);
 
     if (newTitle !== null && newTitle.trim() !== "" && newTitle !== idea.title) {
-        ideas[index].title = newTitle.trim();
-        saveIdeas();
-        renderIdeas();
-        // Dopamine Spark kecil: notifikasi sukses rename
-        console.log(`Judul ide berhasil diubah menjadi: ${newTitle.trim()}`);
+        // Cari index asli di array 'ideas' sebelum disort/filter
+        const originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact);
+        if (originalIndex !== -1) {
+            ideas[originalIndex].title = newTitle.trim();
+            saveIdeas();
+            renderIdeas();
+        }
     }
 };
-
-// === 6. FORM & DELETE HANDLER LAMA ===
 
 const handleFormSubmit = (event) => {
     event.preventDefault(); 
@@ -207,8 +266,13 @@ const handleFormSubmit = (event) => {
 };
 
 const deleteIdea = (index) => {
-    if (confirm(`Yakin mau mengarsipkan/membunuh ide "${ideas[index].title}"?`)) {
-        ideas.splice(index, 1); 
+    // Gunakan index dari array yang sudah difilter
+    const ideaToDelete = getFilteredAndSortedIdeas()[index];
+    // Cari index asli di array 'ideas' sebelum disort/filter
+    const originalIndex = ideas.findIndex(i => i.title === ideaToDelete.title && i.impact === ideaToDelete.impact);
+
+    if (originalIndex !== -1 && confirm(`Yakin mau mengarsipkan/membunuh ide "${ideaToDelete.title}"?`)) {
+        ideas.splice(originalIndex, 1); 
         saveIdeas(); 
         renderIdeas(); 
     }
@@ -227,5 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose functions to window
     window.deleteIdea = deleteIdea;
     window.updateStatus = updateStatus;
-    window.renameIdea = renameIdea; // Tambahkan fungsi rename ke window
+    window.renameIdea = renameIdea;
+    window.sortIdeas = sortIdeas; // Expose fungsi sort
+    window.filterIdeas = filterIdeas; // Expose fungsi filter
 });
