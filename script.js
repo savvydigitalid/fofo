@@ -1,10 +1,10 @@
 // =======================================================
-// FOFo V2.5: SUPER APP (Fix Error Parsing User)
+// FOFo V2.6: SUPER APP (Fix Multi-Select User Filter)
 // =======================================================
 
 // --- CONFIGURATION ---
 // PASTE LINK CSV DARI GOOGLE SHEET LO DISINI
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI_PAKE_LINK_ASLI_LO.../pub?output=csv'; 
 const HOHO_PASSWORD = "admin"; 
 
 // --- STATE VARIABLES ---
@@ -16,7 +16,7 @@ let currentFilter = 'all';
 let currentSort = 'default';
 
 // =======================================================
-// PART 1: FOFo LOGIC (IDEAS) - DARI V1.6 STABLE
+// PART 1: FOFo LOGIC (IDEAS) - Full Implementasi
 // =======================================================
 // === LOCALSTORAGE & PERSISTENCE ===
 const loadIdeas = () => {
@@ -282,7 +282,7 @@ const importIdeas = (event) => {
 
 
 // =======================================================
-// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.5!)
+// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.6!)
 // =======================================================
 
 // A. TAB SYSTEM & LOGIN
@@ -311,7 +311,7 @@ const checkHohoLogin = () => {
     }
 };
 
-// B. FETCH & PARSE DATA (MENGGUNAKAN INDEX BARU)
+// B. FETCH & PARSE DATA 
 const parseDate = (dateStr) => {
     const cleanedStr = dateStr.trim().replace(/[\/]/g, '-');
     const parts = cleanedStr.split('-');
@@ -350,7 +350,7 @@ const fetchHohoSheet = async () => {
 
             const user = columns[1];
             
-            // FIX V2.5: Validasi User (index 1) harus string yang tidak kosong dan tidak terlihat seperti kode/formula yang rusak.
+            // Validasi User (index 1) harus string yang tidak kosong dan tidak terlihat seperti kode/formula yang rusak.
             if (!user || user.trim() === '' || user.includes('function') || user.length > 50) return null; 
 
             const dateStr = columns[3] || ''; // Kolom 4 (Index 3)
@@ -394,7 +394,7 @@ const fetchHohoSheet = async () => {
 
 // C. FILTER & AGGREGATE LOGIC
 const populateUserFilter = (data) => {
-    // FIX V2.5: Menghilangkan duplikat dan membersihkan string user
+    // Menghilangkan duplikat dan membersihkan string user
     const users = [...new Set(data.map(d => d.user))]
         .filter(u => u && u.trim() !== '')
         .sort((a, b) => a.localeCompare(b));
@@ -402,7 +402,9 @@ const populateUserFilter = (data) => {
     const select = document.getElementById('filter-user');
     if (!select) return;
 
-    select.innerHTML = '<option value="all">Semua Staff</option>';
+    select.innerHTML = ''; // Hapus option 'Semua Staff' default
+    
+    // Tambahkan semua user ke filter
     users.forEach(u => {
         select.innerHTML += `<option value="${u}">${u}</option>`;
     });
@@ -411,7 +413,10 @@ const populateUserFilter = (data) => {
 const processHohoData = () => {
     const startStr = document.getElementById('filter-start-date').value;
     const endStr = document.getElementById('filter-end-date').value;
-    const selectedUser = document.getElementById('filter-user').value;
+    
+    // FIX V2.6: Ambil semua user yang dipilih dari multi-select
+    const userSelectElement = document.getElementById('filter-user');
+    const selectedUsers = Array.from(userSelectElement.selectedOptions).map(option => option.value);
 
     const startDate = startStr ? parseDate(startStr) : new Date('2000-01-01');
     const endDate = endStr ? parseDate(endStr) : new Date('2099-12-31');
@@ -423,7 +428,9 @@ const processHohoData = () => {
         
         const isDateValid = !isNaN(dDate.getTime());
         const isDateMatch = isDateValid && dDate >= startDate && dDate <= endDate; 
-        const isUserMatch = selectedUser === 'all' || d.user === selectedUser;
+        
+        // FIX V2.6: Jika tidak ada user yang dipilih, tampilkan semua user. Jika ada, pastikan user ada di list yang dipilih.
+        const isUserMatch = selectedUsers.length === 0 || selectedUsers.includes(d.user);
         
         return isDateMatch && isUserMatch;
     });
@@ -461,10 +468,10 @@ const processHohoData = () => {
     // 3. AGGREGATION PER DATE (Chart Trend)
     const dateStats = {};
     filtered.forEach(d => {
-        const dateKey = d.date; 
-        if (!dateStats[dateKey]) dateStats[dateKey] = { sumPerc: 0, count: 0 };
-        dateStats[dateKey].sumPerc += d.taskPerc;
-        dateStats[dateKey].count += 1;
+        const dDate = d.date; 
+        if (!dateStats[dDate]) dateStats[dDate] = { sumPerc: 0, count: 0 };
+        dateStats[dDate].sumPerc += d.taskPerc;
+        dateStats[dDate].count += 1;
     });
     
     const trendLabels = Object.keys(dateStats).sort();
@@ -473,7 +480,7 @@ const processHohoData = () => {
     // 4. UPDATE UI
     updateSummaryCards(leaderboard, filtered);
     renderLeaderboardTable(leaderboard);
-    renderCharts(leaderboard, trendLabels, trendData, selectedUser);
+    renderCharts(leaderboard, trendLabels, trendData, selectedUsers); // Kirim selectedUsers untuk label chart
 };
 
 // D. RENDER UI COMPONENTS
@@ -492,6 +499,9 @@ const updateSummaryCards = (leaderboard, rawData) => {
     if (top) {
         document.getElementById('stat-top-user').innerText = top.user;
         document.getElementById('stat-top-role').innerText = top.role;
+    } else {
+        document.getElementById('stat-top-user').innerText = "-";
+        document.getElementById('stat-top-role').innerText = "-";
     }
 };
 
@@ -520,7 +530,7 @@ const renderLeaderboardTable = (data) => {
     });
 };
 
-const renderCharts = (leaderboard, trendLabels, trendData, selectedUser) => {
+const renderCharts = (leaderboard, trendLabels, trendData, selectedUsers) => {
     // 1. COMPARISON CHART (Bar)
     const ctxComp = document.getElementById('chart-comparison');
     if (!ctxComp) return;
@@ -547,12 +557,22 @@ const renderCharts = (leaderboard, trendLabels, trendData, selectedUser) => {
     const ctx2 = ctxTrend.getContext('2d');
     if (chartInstanceTrend) chartInstanceTrend.destroy();
     
+    // FIX V2.6: Update Label Chart Trend
+    let chartLabel;
+    if (selectedUsers.length === 0) {
+        chartLabel = 'Rata-rata Task % Team (Semua Staff)';
+    } else if (selectedUsers.length === 1) {
+        chartLabel = `Task % ${selectedUsers[0]}`;
+    } else {
+        chartLabel = `Rata-rata Task % (${selectedUsers.length} Staff)`;
+    }
+
     chartInstanceTrend = new Chart(ctx2, {
         type: 'line',
         data: {
             labels: trendLabels,
             datasets: [{
-                label: selectedUser === 'all' ? 'Rata-rata Task % Team' : `Task % ${selectedUser}`,
+                label: chartLabel,
                 data: trendData,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
