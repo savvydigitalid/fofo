@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoFo | Founder Focus V2.0</title>
+    <title>FoFo | Founder Focus V1.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
@@ -18,119 +18,92 @@
                 <p class="text-gray-500 text-sm mt-1">Focus. Validate. Execute.</p>
             </div>
             
-            <div class="flex bg-gray-200 p-1 rounded-xl">
-                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-4 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-gray-900 transition-all">
-                    💡 Ide Park
+            <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200">
+                <button onclick="exportIdeas()" class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                    <span>💾</span> Backup
                 </button>
-                <button onclick="switchTab('hoho')" id="tab-hoho" class="px-4 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 transition-all">
-                    ⚔️ HoHo Staff
+                <div class="w-px h-4 bg-gray-200"></div>
+                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importIdeas(event)">
+                <button onclick="document.getElementById('importFile').click()" class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                    <span>📤</span> Restore
                 </button>
             </div>
         </div>
 
-        <div id="view-ideas" class="block">
-            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-indigo-100/50 border border-indigo-50 mb-10 relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+        <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-indigo-100/50 border border-indigo-50 mb-10 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+
+            <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm">✨</span>
+                Parkir Ide Baru
+            </h2>
+            
+            <form id="idea-form" class="space-y-5 relative z-10">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Judul Ide</label>
+                    <input type="text" id="title" required placeholder="Contoh: Jual Kopi Saset Premium Langganan..."
+                           class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 transition-all outline-none">
+                </div>
                 
-                <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 text-sm">✨</span>
-                    Parkir Ide Baru
-                </h2>
-                
-                <form id="idea-form" class="space-y-5 relative z-10">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Judul Ide</label>
-                        <input type="text" id="title" required placeholder="Contoh: Jual Kopi Saset Premium..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 outline-none">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Impact (Cuan)</label>
+                        <select id="impact" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 outline-none cursor-pointer">
+                            <option value="">Pilih Skor...</option>
+                            <option value="5">5 - 🔥 Gila Cuan</option>
+                            <option value="3">3 - 😐 Lumayan</option>
+                            <option value="1">1 - 📉 Receh</option>
+                        </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Impact</label>
-                            <select id="impact" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="">Skor...</option>
-                                <option value="5">5 - 🔥 Gila Cuan</option>
-                                <option value="3">3 - 😐 Lumayan</option>
-                                <option value="1">1 - 📉 Receh</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Effort</label>
-                            <select id="effort" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="">Skor...</option>
-                                <option value="5">5 - 🥵 Susah</option>
-                                <option value="3">3 - 🤔 Sedang</option>
-                                <option value="1">1 - ⚡ Gampang</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Effort (Usaha)</label>
+                        <select id="effort" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 outline-none cursor-pointer">
+                            <option value="">Pilih Skor...</option>
+                            <option value="5">5 - 🥵 Susah Mampus</option>
+                            <option value="3">3 - 🤔 Sedang</option>
+                            <option value="1">1 - ⚡ Gampang</option>
+                        </select>
                     </div>
-                    <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                        <span class="text-xs font-semibold text-indigo-600 uppercase">Prediksi:</span>
-                        <div class="flex items-center gap-3">
-                            <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
-                            <span id="score-preview-label"></span>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 text-center shadow-lg transition-all transform hover:-translate-y-0.5">Parkir Ide Sekarang 🚀</button>
-                </form>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-xl font-bold text-gray-900">Pipeline Ide</h2>
-                    <span id="idea-count" class="bg-gray-200 text-gray-700 text-xs font-bold px-2.5 py-1 rounded-md">0</span>
                 </div>
-                <div id="total-score"></div>
-            </div>
-            
-            <div class="flex flex-wrap gap-2 mb-8">
-                <button onclick="filterIdeas('all')" id="filter-all" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm">Semua</button>
-                <button onclick="filterIdeas('parked')" id="filter-parked" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm">🅿️ Parked</button>
-                <button onclick="filterIdeas('validated')" id="filter-validated" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm">✨ Validated</button>
-                <button onclick="filterIdeas('building')" id="filter-building" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm">🔨 Building</button>
-                <button onclick="filterIdeas('done')" id="filter-done" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm">🎉 Done</button>
-                <div class="w-px h-8 bg-gray-300 mx-2"></div>
-                <button onclick="sortIdeas('score')" class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all shadow-sm">🏆 Sort Score</button>
-            </div>
-            
-            <div id="idea-list" class="space-y-5 pb-20"></div>
-        </div>
 
+                <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100 animate-pulse">
+                    <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Prediksi:</span>
+                    <div class="flex items-center gap-3">
+                        <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
+                        <span id="score-preview-label"></span>
+                    </div>
+                </div>
 
-        <div id="view-hoho" class="hidden">
-            
-            <div id="hoho-login" class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 text-center max-w-sm mx-auto mt-10">
-                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
-                <h2 class="text-xl font-bold text-gray-900 mb-2">Restricted Access</h2>
-                <p class="text-gray-500 text-sm mb-6">Masukkan password untuk melihat laporan staff HoHo.</p>
-                
-                <input type="password" id="hoho-password" placeholder="Password..." 
-                       class="w-full bg-gray-50 border border-gray-200 text-center text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3 mb-4">
-                
-                <button onclick="checkHohoLogin()" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 font-bold rounded-xl text-sm px-5 py-3 transition-all">
-                    Buka Dashboard 🔓
+                <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 text-center shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                    Parkir Ide Sekarang 🚀
                 </button>
-            </div>
-
-            <div id="hoho-dashboard" class="hidden">
-                <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 rounded-3xl shadow-lg mb-8 text-white relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h2 class="text-2xl font-bold mb-1">HoHo Leaderboard ⚔️</h2>
-                        <p class="text-gray-400 text-xs">Real-time data from Google Sheets</p>
-                    </div>
-                    <button onclick="fetchHohoData()" class="absolute top-6 right-6 bg-white/10 hover:bg-white/20 p-2 rounded-lg backdrop-blur-sm transition-all" title="Refresh Data">
-                        🔄
-                    </button>
-                </div>
-
-                <div id="hoho-loading" class="hidden text-center py-10">
-                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p class="text-gray-500 text-sm mt-3">Mengambil data dari markas...</p>
-                </div>
-
-                <div id="staff-list" class="grid grid-cols-1 gap-4">
-                    </div>
-            </div>
-
+            </form>
         </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+                <h2 class="text-xl font-bold text-gray-900">Pipeline Ide</h2>
+                <span id="idea-count" class="bg-gray-200 text-gray-700 text-xs font-bold px-2.5 py-1 rounded-md">0</span>
+            </div>
+            <div id="total-score"></div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-8">
+            <button onclick="filterIdeas('all')" id="filter-all" class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm">Semua</button>
+            <button onclick="filterIdeas('parked')" id="filter-parked" class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm">🅿️ Parked</button>
+            <button onclick="filterIdeas('validated')" id="filter-validated" class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm">✨ Validated</button>
+            <button onclick="filterIdeas('building')" id="filter-building" class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm">🔨 Building</button>
+            <button onclick="filterIdeas('done')" id="filter-done" class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm">🎉 Done</button>
+            
+            <div class="w-px h-8 bg-gray-300 mx-2"></div>
+            
+            <button onclick="sortIdeas('score')" class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all shadow-sm hover:shadow-md flex items-center gap-1">
+                🏆 Sort by Score
+            </button>
+        </div>
+
+        <div id="idea-list" class="space-y-5 pb-20">
+            </div>
 
     </div>
 
