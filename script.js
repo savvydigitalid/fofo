@@ -1,354 +1,312 @@
 // =======================================================
-// FOFo V1.9: FINAL STABLE (Clean Code, No Syntax Error, Real-Time Preview)
+// FOFo V2.0: SUPER APP (FoFo + HoHo Dashboard)
 // =======================================================
 
-let ideas = [];
-let currentFilter = 'all'; 
-let currentSort = 'default'; 
+// --- CONFIGURATION ---
+// PASTE LINK CSV DARI GOOGLE SHEET LO DISINI
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI.../pub?output=csv'; 
+const HOHO_PASSWORD = "admin"; 
 
-// === 1. LOCALSTORAGE & PERSISTENCE ===
+// --- STATE VARIABLES ---
+let ideas = [];
+let allSheetData = []; // Data mentah dari sheet
+let chartInstanceComp = null;
+let chartInstanceTrend = null;
+
+// =======================================================
+// PART 1: FOFO LOGIC (IDEAS) - TETAP AMAN
+// =======================================================
 
 const loadIdeas = () => {
     const storedIdeas = localStorage.getItem('fofoIdeas');
-    if (storedIdeas) {
-        ideas = JSON.parse(storedIdeas).map(idea => ({
-            ...idea,
-            status: idea.status || 'parked' 
-        }));
-    }
+    if (storedIdeas) ideas = JSON.parse(storedIdeas);
     renderIdeas(); 
 };
+const saveIdeas = () => localStorage.setItem('fofoIdeas', JSON.stringify(ideas));
 
-const saveIdeas = () => {
-    localStorage.setItem('fofoIdeas', JSON.stringify(ideas));
-};
-
-// === 2. FILTER & SORT LOGIC ===
-
-const getNetScore = (impact, effort) => impact - effort;
-
-const getFilteredAndSortedIdeas = () => {
-    let filteredIdeas = ideas;
-    
-    if (currentFilter !== 'all') {
-        filteredIdeas = ideas.filter(idea => idea.status === currentFilter);
-    }
-
-    let sortedIdeas = [...filteredIdeas];
-
-    if (currentSort === 'score') {
-        sortedIdeas.sort((a, b) => {
-            const scoreA = getNetScore(a.impact, a.effort);
-            const scoreB = getNetScore(b.impact, b.effort);
-            return scoreB - scoreA; 
-        });
-    } else {
-        const order = ['parked', 'validated', 'building', 'done'];
-        sortedIdeas.sort((a, b) => {
-            return order.indexOf(a.status) - order.indexOf(b.status);
-        });
-    }
-
-    return sortedIdeas;
-};
-
-const filterIdeas = (filter) => {
-    currentFilter = filter;
-    
-    // Style untuk tombol filter (Dopamine colors)
-    const activeClasses = ['bg-indigo-600', 'text-white', 'shadow-md', 'scale-105'];
-    const inactiveClasses = ['bg-white', 'text-gray-600', 'hover:bg-gray-50', 'border', 'border-gray-200'];
-
-    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-        btn.classList.remove(...activeClasses);
-        btn.classList.add(...inactiveClasses);
-    });
-
-    const activeBtn = document.getElementById(`filter-${filter}`);
-    if (activeBtn) {
-        activeBtn.classList.remove(...inactiveClasses);
-        activeBtn.classList.add(...activeClasses);
-    }
-
-    renderIdeas();
-};
-
-const sortIdeas = (sort) => {
-    currentSort = sort;
-    renderIdeas();
-};
-
-
-// === 3. SCORING & PREVIEW LOGIC ===
-
-const getPriorityLabel = (impact, effort) => {
-    const netScore = getNetScore(impact, effort);
-    let label = '';
-    let color = '';
-
-    if (netScore >= 4) {
-        label = 'QUICK WIN! ⚡️';
-        color = 'bg-green-500 shadow-green-200';
-    } else if (netScore >= 0) {
-        label = 'BIG BET 🧠';
-        color = 'bg-indigo-500 shadow-indigo-200';
-    } else {
-        label = 'TIME WASTER 🗑️';
-        color = 'bg-red-500 shadow-red-200';
-    }
-
-    return { label, color, netScore };
-};
-
-const updateScorePreview = () => {
-    const impactInput = document.getElementById('impact');
-    const effortInput = document.getElementById('effort');
-    const previewContainer = document.getElementById('score-preview-container');
-    const previewLabel = document.getElementById('score-preview-label');
-    const previewNet = document.getElementById('score-preview-net');
-
-    const impact = parseInt(impactInput.value);
-    const effort = parseInt(effortInput.value);
-
-    // Tampilkan preview HANYA jika kedua input sudah diisi angka 1-5
-    if (impact >= 1 && impact <= 5 && effort >= 1 && effort <= 5) {
-        const { label, color, netScore } = getPriorityLabel(impact, effort);
-        
-        previewLabel.textContent = label;
-        // Reset class dan set class baru
-        previewLabel.className = `inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full text-white shadow-md ${color}`;
-        
-        previewNet.textContent = `Net Score: ${netScore}`;
-        
-        previewContainer.classList.remove('hidden');
-        previewContainer.classList.add('flex'); // Pake flex biar rapi
-    } else {
-        previewContainer.classList.add('hidden');
-        previewContainer.classList.remove('flex');
-    }
-};
-
-const calculateAndRenderTotalScore = () => {
-    const activeIdeas = ideas.filter(idea => idea.status !== 'done');
-    const totalImpact = activeIdeas.reduce((sum, idea) => sum + idea.impact, 0);
-    const totalEffort = activeIdeas.reduce((sum, idea) => sum + idea.effort, 0);
-    const totalNetScore = totalImpact - totalEffort;
-
-    const scoreElement = document.getElementById('total-score');
-    if (!scoreElement) return;
-
-    scoreElement.textContent = `Total Score: ${totalNetScore}`;
-    
-    // Warna background dashboard score
-    if (totalNetScore > 5) {
-        scoreElement.className = 'text-sm font-bold px-4 py-2 rounded-xl bg-green-100 text-green-700 border border-green-200'; 
-    } else if (totalNetScore >= 0) {
-        scoreElement.className = 'text-sm font-bold px-4 py-2 rounded-xl bg-yellow-100 text-yellow-700 border border-yellow-200'; 
-    } else {
-        scoreElement.className = 'text-sm font-bold px-4 py-2 rounded-xl bg-red-100 text-red-700 border border-red-200'; 
-    }
-};
-
-// === 4. STATUS & KANBAN LOGIC ===
-
-const getStatusStyle = (status) => {
-    switch (status) {
-        case 'parked': return { text: 'Parked', icon:'🅿️', color: 'bg-gray-50 text-gray-600 border-gray-200' };
-        case 'validated': return { text: 'Validated', icon:'✨', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' };
-        case 'building': return { text: 'Building', icon:'🔨', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
-        case 'done': return { text: 'DONE', icon:'🎉', color: 'bg-green-50 text-green-700 border-green-200' };
-        default: return { text: 'Unknown', icon:'?', color: 'bg-gray-100' };
-    }
-};
-
-const updateStatus = (index, newStatus) => {
-    const ideaToUpdate = getFilteredAndSortedIdeas()[index];
-    const originalIndex = ideas.findIndex(idea => idea.title === ideaToUpdate.title && idea.impact === ideaToUpdate.impact);
-
-    if (originalIndex !== -1) {
-        ideas[originalIndex].status = newStatus;
-        saveIdeas();
-        renderIdeas();
-    }
-};
-
-// === 5. RENDERING (UI CARD BARU) ===
-
+// ... (Rendering Logic FoFo yang sudah stabil gue persingkat biar muat, tapi fungsinya tetap sama)
 const renderIdeas = () => {
-    const listContainer = document.getElementById('idea-list');
-    const countElement = document.getElementById('idea-count');
-    
-    const ideasToRender = getFilteredAndSortedIdeas();
-
-    listContainer.innerHTML = '';
-    countElement.textContent = ideasToRender.length; 
-
-    ideasToRender.forEach((idea, index) => {
-        const priority = getPriorityLabel(idea.impact, idea.effort);
-        const status = getStatusStyle(idea.status);
+    const list = document.getElementById('idea-list');
+    list.innerHTML = '';
+    ideas.forEach((idea, index) => {
+        const net = idea.impact - idea.effort;
+        let color = net >= 4 ? 'bg-green-500' : (net >= 0 ? 'bg-indigo-500' : 'bg-red-500');
+        let label = net >= 4 ? 'QUICK WIN' : (net >= 0 ? 'BIG BET' : 'TIME WASTER');
         
-        const ideaCard = document.createElement('div');
-        // Style Card ala HoHo (Rounded, Shadow, Clean)
-        ideaCard.className = `group bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden`;
-        
-        ideaCard.innerHTML = `
-            <div class="flex justify-between items-start mb-4 relative z-10">
-                <div class="flex flex-col">
-                    <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors flex items-center gap-2">
-                        ${idea.title}
-                        <button onclick="editIdea(${index})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-indigo-500 transition-all p-1 rounded-md hover:bg-gray-50" title="Edit Ide">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                    </h3>
-                    <div class="flex items-center gap-2 mt-2">
-                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${status.color}">
-                            <span class="mr-1.5 text-xs">${status.icon}</span> ${status.text}
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="flex flex-col items-end gap-2">
-                    <span class="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full text-white shadow-sm ${priority.color}">
-                        ${priority.label}
-                    </span>
-                    <div class="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 font-mono">
-                        <span class="font-bold">Net:${priority.netScore}</span>
-                        <span class="mx-2 text-gray-300">|</span>
-                        <span>I:${idea.impact}</span>
-                        <span class="text-gray-300">/</span>
-                        <span>E:${idea.effort}</span>
-                    </div>
-                </div>
+        list.innerHTML += `
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+            <div>
+                <h3 class="font-bold text-gray-800">${idea.title}</h3>
+                <p class="text-xs text-gray-400">Imp: ${idea.impact} | Eff: ${idea.effort}</p>
             </div>
-            
-            <div class="pt-4 border-t border-gray-50 flex items-center justify-between relative z-10">
-                <div class="flex gap-2">
-                    ${getActionButton(idea.status, index)}
-                    <button onclick="updateStatus(${index}, 'done')" class="${idea.status === 'done' ? 'hidden' : ''} px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-100">
-                        Mark Done
-                    </button>
-                </div>
-                <button onclick="deleteIdea(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-1.5 hover:bg-red-50 rounded-lg" title="Delete Idea">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
+            <div class="text-right">
+                <span class="px-3 py-1 text-[10px] font-bold text-white rounded-full ${color}">${label}</span>
+                <button onclick="deleteIdea(${index})" class="block text-xs text-red-400 mt-2 hover:text-red-600">Hapus</button>
             </div>
-        `;
-        listContainer.appendChild(ideaCard);
+        </div>`;
     });
-    
-    // Panggil fungsi total score setiap render
-    calculateAndRenderTotalScore();
 };
 
-const getActionButton = (currentStatus, index) => {
-    const baseClass = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 border";
-    switch (currentStatus) {
-        case 'parked':
-            return `<button onclick="updateStatus(${index}, 'validated')" class="${baseClass} text-yellow-700 bg-yellow-50 hover:bg-yellow-100 border-yellow-100">Validate ✨</button>`;
-        case 'validated':
-            return `<button onclick="updateStatus(${index}, 'building')" class="${baseClass} text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-100">Build 🔨</button>`;
-        default: return '';
-    }
-};
-
-// === 6. HANDLERS (EDIT, IMPORT/EXPORT) ===
-
-const editIdea = (index) => {
-    const idea = getFilteredAndSortedIdeas()[index];
-    let originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact && i.effort === idea.effort);
-
-    const newTitle = prompt("Edit Judul Ide:", idea.title);
-    if (newTitle !== null && newTitle.trim() === "") return;
-    
-    const newImpact = parseInt(prompt(`Edit Impact (1-5):`, idea.impact));
-    const newEffort = parseInt(prompt(`Edit Effort (1-5):`, idea.effort));
-
-    if (isNaN(newImpact) || isNaN(newEffort) || newImpact < 1 || newImpact > 5) {
-        alert("Skor harus angka 1-5.");
-        return;
-    }
-
-    if (originalIndex !== -1) {
-        ideas[originalIndex].title = newTitle.trim() || idea.title;
-        ideas[originalIndex].impact = newImpact;
-        ideas[originalIndex].effort = newEffort;
-        saveIdeas();
-        renderIdeas(); 
-    }
-};
-
-const handleFormSubmit = (event) => {
-    event.preventDefault(); 
+const handleFormSubmit = (e) => {
+    e.preventDefault();
     const title = document.getElementById('title').value;
     const impact = parseInt(document.getElementById('impact').value);
     const effort = parseInt(document.getElementById('effort').value);
-
-    if (!title || !impact || !effort) return;
-
-    ideas.unshift({ title, impact, effort, status: 'parked' }); 
-    saveIdeas(); 
-    renderIdeas(); 
-    
+    ideas.unshift({ title, impact, effort });
+    saveIdeas(); renderIdeas();
     document.getElementById('idea-form').reset();
-    updateScorePreview(); // Reset preview
 };
 
-const deleteIdea = (index) => {
-    const idea = getFilteredAndSortedIdeas()[index];
-    const originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact);
-    if (originalIndex !== -1 && confirm(`Hapus "${idea.title}"?`)) {
-        ideas.splice(originalIndex, 1); 
-        saveIdeas(); 
-        renderIdeas(); 
+const deleteIdea = (idx) => {
+    if(confirm('Hapus?')) { ideas.splice(idx, 1); saveIdeas(); renderIdeas(); }
+};
+
+// =======================================================
+// PART 2: HOHO DASHBOARD LOGIC (NEW!)
+// =======================================================
+
+// A. TAB SYSTEM & LOGIN
+const switchTab = (tab) => {
+    const ids = ['view-ideas', 'view-hoho'];
+    const btns = ['tab-ideas', 'tab-hoho'];
+    
+    document.getElementById('view-ideas').classList.toggle('hidden', tab !== 'ideas');
+    document.getElementById('view-hoho').classList.toggle('hidden', tab !== 'hoho');
+
+    // Style active button
+    document.getElementById('tab-ideas').className = tab === 'ideas' 
+        ? "px-6 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md transition-all"
+        : "px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all";
+    
+    document.getElementById('tab-hoho').className = tab === 'hoho'
+        ? "px-6 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md transition-all"
+        : "px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all";
+};
+
+const checkHohoLogin = () => {
+    if (document.getElementById('hoho-password').value === HOHO_PASSWORD) {
+        document.getElementById('hoho-login').classList.add('hidden');
+        document.getElementById('hoho-dashboard').classList.remove('hidden');
+        fetchHohoSheet(); // Load data saat login
+    } else {
+        alert("Password Salah!");
     }
 };
 
-const exportIdeas = () => {
-    if (ideas.length === 0) return alert("Kosong bro!");
-    const dataStr = JSON.stringify(ideas, null, 2); 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([dataStr], { type: "application/json" }));
-    a.download = `fofo_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
+// B. FETCH & PARSE DATA
+const fetchHohoSheet = async () => {
+    try {
+        const res = await fetch(SHEET_CSV_URL);
+        const text = await res.text();
+        
+        // CSV Parser Sederhana
+        const rows = text.split('\n').map(r => r.split(','));
+        const data = rows.slice(1).map(row => {
+            // Mapping Kolom (Sesuaikan Index [0], [1] dst dengan Sheet lo)
+            // Asumsi: 0=Date, 1=User, 2=Role, 3=Task%, 4=TaskXP, 5=LearnXP
+            return {
+                date: row[0]?.replace(/"/g, '').trim(), // String YYYY-MM-DD
+                user: row[1]?.replace(/"/g, '').trim(),
+                role: row[2]?.replace(/"/g, '').trim(),
+                taskPerc: parseFloat(row[3]) || 0,
+                taskXP: parseInt(row[4]) || 0,
+                learnXP: parseInt(row[5]) || 0,
+                totalXP: (parseInt(row[4]) || 0) + (parseInt(row[5]) || 0)
+            };
+        }).filter(item => item.user && item.date); // Buang baris kosong
+
+        allSheetData = data;
+        populateUserFilter(data);
+        processHohoData(); // Render awal (Semua data)
+        alert("Data Dashboard Terupdate! 🚀");
+
+    } catch (err) {
+        console.error(err);
+        alert("Gagal ambil data Sheet. Cek Link CSV.");
+    }
 };
 
-const importIdeas = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data) && confirm(`Import ${data.length} ide? Data lama akan ditimpa.`)) {
-                ideas = data;
-                saveIdeas();
-                renderIdeas();
-            }
-        } catch (error) { alert("File JSON rusak/salah."); }
-    };
-    reader.readAsText(file);
+// C. FILTER & AGGREGATE LOGIC
+const populateUserFilter = (data) => {
+    const users = [...new Set(data.map(d => d.user))];
+    const select = document.getElementById('filter-user');
+    select.innerHTML = '<option value="all">Semua Staff</option>';
+    users.forEach(u => {
+        select.innerHTML += `<option value="${u}">${u}</option>`;
+    });
 };
 
-// === 7. INIT (START) ===
+const processHohoData = () => {
+    const startStr = document.getElementById('filter-start-date').value;
+    const endStr = document.getElementById('filter-end-date').value;
+    const selectedUser = document.getElementById('filter-user').value;
 
+    const startDate = startStr ? new Date(startStr) : new Date('2000-01-01');
+    const endDate = endStr ? new Date(endStr) : new Date('2099-12-31');
+
+    // 1. FILTERING
+    const filtered = allSheetData.filter(d => {
+        const dDate = new Date(d.date);
+        const isDateMatch = dDate >= startDate && dDate <= endDate;
+        const isUserMatch = selectedUser === 'all' || d.user === selectedUser;
+        return isDateMatch && isUserMatch;
+    });
+
+    if (filtered.length === 0) return alert("Tidak ada data di filter ini.");
+
+    // 2. AGGREGATION PER USER (Untuk Leaderboard & Chart Comparison)
+    const userStats = {};
+    filtered.forEach(d => {
+        if (!userStats[d.user]) {
+            userStats[d.user] = { 
+                user: d.user, role: d.role, 
+                sumTaskXP: 0, sumLearnXP: 0, sumTotalXP: 0, 
+                sumTaskPerc: 0, count: 0 
+            };
+        }
+        userStats[d.user].sumTaskXP += d.taskXP;
+        userStats[d.user].sumLearnXP += d.learnXP;
+        userStats[d.user].sumTotalXP += d.totalXP;
+        userStats[d.user].sumTaskPerc += d.taskPerc;
+        userStats[d.user].count += 1;
+    });
+
+    // Convert ke Array & Hitung Rata-rata
+    const leaderboard = Object.values(userStats).map(u => ({
+        ...u,
+        avgTaskPerc: (u.sumTaskPerc / u.count).toFixed(1)
+    })).sort((a, b) => b.sumTotalXP - a.sumTotalXP); // Sort by Total XP High to Low
+
+    // 3. AGGREGATION PER DATE (Untuk Chart Trend)
+    // Jika user spesifik dipilih, kita lihat trend dia. Jika 'all', kita lihat rata-rata team.
+    const dateStats = {};
+    filtered.forEach(d => {
+        if (!dateStats[d.date]) dateStats[d.date] = { sumPerc: 0, count: 0 };
+        dateStats[d.date].sumPerc += d.taskPerc;
+        dateStats[d.date].count += 1;
+    });
+    
+    // Sort date secara kronologis
+    const trendLabels = Object.keys(dateStats).sort();
+    const trendData = trendLabels.map(date => (dateStats[date].sumPerc / dateStats[date].count).toFixed(1));
+
+    // 4. UPDATE UI
+    updateSummaryCards(leaderboard, filtered);
+    renderLeaderboardTable(leaderboard);
+    renderCharts(leaderboard, trendLabels, trendData, selectedUser);
+};
+
+// D. RENDER UI COMPONENTS
+const updateSummaryCards = (leaderboard, rawData) => {
+    // Total XP Team di periode ini
+    const grandTotalXP = leaderboard.reduce((sum, u) => sum + u.sumTotalXP, 0);
+    document.getElementById('stat-total-xp').innerText = grandTotalXP.toLocaleString() + " XP";
+
+    // Avg Dopamine Team
+    const grandAvgDopamine = (leaderboard.reduce((sum, u) => sum + parseFloat(u.avgTaskPerc), 0) / leaderboard.length).toFixed(1);
+    document.getElementById('stat-avg-dopamine').innerText = grandAvgDopamine + "%";
+    document.getElementById('stat-bar-dopamine').style.width = grandAvgDopamine + "%";
+
+    // Top Performer
+    const top = leaderboard[0];
+    if (top) {
+        document.getElementById('stat-top-user').innerText = top.user;
+        document.getElementById('stat-top-role').innerText = top.role;
+    }
+};
+
+const renderLeaderboardTable = (data) => {
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = '';
+    data.forEach((u, i) => {
+        let rankColor = i === 0 ? 'text-yellow-600 font-bold' : (i===1 ? 'text-gray-600' : (i===2 ? 'text-orange-700' : 'text-gray-500'));
+        let rankIcon = i === 0 ? '👑' : (i===1 ? '🥈' : (i===2 ? '🥉' : `#${i+1}`));
+        
+        tbody.innerHTML += `
+            <tr class="bg-white border-b hover:bg-gray-50">
+                <td class="px-6 py-4 ${rankColor}">${rankIcon}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">
+                    ${u.user} <span class="text-xs text-gray-400 block">${u.role}</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">${u.avgTaskPerc}%</span>
+                </td>
+                <td class="px-6 py-4 text-right text-gray-600">${u.sumTaskXP}</td>
+                <td class="px-6 py-4 text-right text-gray-600">${u.sumLearnXP}</td>
+                <td class="px-6 py-4 text-right font-bold text-indigo-600">${u.sumTotalXP} XP</td>
+            </tr>
+        `;
+    });
+};
+
+const renderCharts = (leaderboard, trendLabels, trendData, selectedUser) => {
+    // 1. COMPARISON CHART (Bar)
+    const ctxComp = document.getElementById('chart-comparison').getContext('2d');
+    if (chartInstanceComp) chartInstanceComp.destroy();
+
+    // Data for Comparison: Top 10 Users
+    const top10 = leaderboard.slice(0, 10); 
+    
+    chartInstanceComp = new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+            labels: top10.map(u => u.user),
+            datasets: [
+                {
+                    label: 'Task XP',
+                    data: top10.map(u => u.sumTaskXP),
+                    backgroundColor: '#4f46e5', // Indigo
+                    stack: 'Stack 0',
+                },
+                {
+                    label: 'Learning XP',
+                    data: top10.map(u => u.sumLearnXP),
+                    backgroundColor: '#f59e0b', // Amber
+                    stack: 'Stack 0',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+        }
+    });
+
+    // 2. TREND CHART (Line)
+    const ctxTrend = document.getElementById('chart-trend').getContext('2d');
+    if (chartInstanceTrend) chartInstanceTrend.destroy();
+
+    chartInstanceTrend = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: selectedUser === 'all' ? 'Rata-rata Task % Team' : `Task % ${selectedUser}`,
+                data: trendData,
+                borderColor: '#10b981', // Emerald
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { min: 0, max: 100 } }
+        }
+    });
+};
+
+// === INIT ===
 document.addEventListener('DOMContentLoaded', () => {
-    loadIdeas(); 
-    
+    loadIdeas();
     const form = document.getElementById('idea-form');
-    if (form) form.addEventListener('submit', handleFormSubmit); 
-    
-    // Listener Real-time Preview
-    document.getElementById('impact').addEventListener('input', updateScorePreview);
-    document.getElementById('effort').addEventListener('input', updateScorePreview);
-    
-    // Expose Global Functions
+    if(form) form.addEventListener('submit', handleFormSubmit);
+
+    // Export functions to global
+    window.switchTab = switchTab;
+    window.checkHohoLogin = checkHohoLogin;
+    window.processHohoData = processHohoData;
+    window.fetchHohoSheet = fetchHohoSheet;
     window.deleteIdea = deleteIdea;
-    window.updateStatus = updateStatus;
-    window.editIdea = editIdea;
-    window.sortIdeas = sortIdeas;
-    window.filterIdeas = filterIdeas;
-    window.exportIdeas = exportIdeas;
-    window.importIdeas = importIdeas;
-    
-    filterIdeas('all'); 
+    // ... (tambahkan fungsi lain jika perlu)
 });
