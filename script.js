@@ -1,10 +1,10 @@
 // =======================================================
-// FOFo V2.3: SUPER APP (FoFo + HoHo Dashboard - FINAL MERGED FIX)
+// FOFo V2.4: SUPER APP (FoFo + HoHo Dashboard - FINAL MAPPING FIX)
 // =======================================================
 
 // --- CONFIGURATION ---
 // PASTE LINK CSV DARI GOOGLE SHEET LO DISINI
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI_PAKE_LINK_ASLI_LO.../pub?output=csv'; 
 const HOHO_PASSWORD = "admin"; 
 
 // --- STATE VARIABLES ---
@@ -47,24 +47,118 @@ const getFilteredAndSortedIdeas = () => {
 };
 
 // --- FOFo RENDERING & HANDLERS ---
-// (Semua fungsi FoFo seperti renderIdeas, updateStatus, handleFormSubmit, exportIdeas, dll. harus ada di sini)
-// Karena lo sudah upload V1.6, gue asumsikan fungsi-fungsi ini sudah ada dan bekerja di file lo, jadi gue hilangkan di sini untuk fokus pada HoHo.
+// (Fungsi FoFo lainnya seperti renderIdeas, filterIdeas, sortIdeas, handleFormSubmit, deleteIdea, updateStatus, exportIdeas, importIdeas, dll. harus dimasukkan di sini)
 
-// Placeholder untuk fungsi FoFo yang dibutuhkan HoHo
-const renderIdeas = () => { 
-    // Logic render ideas (Harusnya ada di file lo)
-    const listContainer = document.getElementById('idea-list');
-    if (listContainer) listContainer.innerHTML = '';
-    // ...
-}; 
 const filterIdeas = (filter) => { 
     currentFilter = filter; 
-    // Logic filter UI (Harusnya ada di file lo)
+    // Logic filter UI (pastikan ini ada di file lo)
     renderIdeas(); 
 };
+const calculateAndRenderTotalScore = () => {
+    const activeIdeas = ideas.filter(idea => idea.status !== 'done');
+    const totalImpact = activeIdeas.reduce((sum, idea) => sum + idea.impact, 0);
+    const totalEffort = activeIdeas.reduce((sum, idea) => sum + idea.effort, 0);
+    const totalNetScore = totalImpact - totalEffort;
+
+    const scoreElement = document.getElementById('total-score');
+    if (!scoreElement) return;
+
+    scoreElement.textContent = `Total Score: ${totalNetScore}`;
+    if (totalNetScore > 5) {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-green-500 text-white'; 
+    } else if (totalNetScore >= 0) {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-yellow-500 text-white'; 
+    } else {
+        scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-red-500 text-white'; 
+    }
+};
+const getPriorityLabel = (impact, effort) => {
+    const netScore = getNetScore(impact, effort);
+    let label = netScore >= 4 ? 'QUICK WIN! ⚡️' : (netScore >= 0 ? 'BIG BET 🧠' : 'TIME WASTER 🗑️');
+    let color = netScore >= 4 ? 'bg-green-500' : (netScore >= 0 ? 'bg-indigo-500' : 'bg-red-500');
+    return { label, color, netScore };
+};
+const getStatusStyle = (status) => {
+    switch (status) {
+        case 'parked': return { text: 'Parked 🅿️', color: 'bg-gray-300 text-gray-800' };
+        case 'validated': return { text: 'Validated ✅', color: 'bg-yellow-500 text-white' };
+        case 'building': return { text: 'Building 🔨', color: 'bg-indigo-500 text-white' };
+        case 'done': return { text: 'DONE! 🎉', color: 'bg-green-600 text-white' };
+        default: return { text: 'Unknown', color: 'bg-gray-200' };
+    }
+};
+const getActionButton = (currentStatus, index) => {
+    switch (currentStatus) {
+        case 'parked': return `<button onclick="updateStatus(${index}, 'validated')" class="text-xs text-yellow-600 hover:text-yellow-800 transition duration-150 font-medium">Mark as Validated ✅</button>`;
+        case 'validated': return `<button onclick="updateStatus(${index}, 'building')" class="text-xs text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium">Move to Building 🔨</button>`;
+        default: return '';
+    }
+};
+const updateStatus = (index, newStatus) => {
+    const ideaToUpdate = getFilteredAndSortedIdeas()[index];
+    const originalIndex = ideas.findIndex(idea => idea.title === ideaToUpdate.title && idea.impact === ideaToUpdate.impact);
+
+    if (originalIndex !== -1) {
+        ideas[originalIndex].status = newStatus;
+        saveIdeas();
+        renderIdeas();
+    }
+};
+
+const renderIdeas = () => {
+    const listContainer = document.getElementById('idea-list');
+    const countElement = document.getElementById('idea-count');
+    const ideasToRender = getFilteredAndSortedIdeas();
+
+    if (!listContainer || !countElement) return;
+
+    listContainer.innerHTML = '';
+    countElement.textContent = ideasToRender.length; 
+
+    ideasToRender.forEach((idea, index) => {
+        const priority = getPriorityLabel(idea.impact, idea.effort);
+        const status = getStatusStyle(idea.status);
+        const ideaCard = document.createElement('div');
+        const statusBorder = idea.status === 'done' ? 'border-l-4 border-green-500' : (idea.status === 'building' ? 'border-l-4 border-indigo-500' : 'border-l-4 border-gray-300');
+
+        ideaCard.className = `card bg-white p-5 rounded-xl shadow-md ${statusBorder}`;
+        
+        ideaCard.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex flex-col">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
+                        <span>${idea.title}</span>
+                        <button onclick="editIdea(${index})" class="text-gray-400 hover:text-indigo-500 transition duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-7.586 7.586a1 1 0 000 1.414L10.586 16l-3 3H3a1 1 0 01-1-1v-4L7.586 11.172z" /></svg>
+                        </button>
+                    </h3>
+                    <span class="text-xs font-medium uppercase ${status.color} px-2 py-0.5 rounded-full mt-1 inline-block w-fit">${status.text}</span>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-3 py-1 text-xs font-semibold uppercase rounded-full text-white ${priority.color}">${priority.label}</span>
+                    <p class="text-xs text-gray-500 mt-1">I:${idea.impact} / E:${idea.effort} / S:${priority.netScore}</p>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-3 border-t pt-3">
+                ${getActionButton(idea.status, index)}
+                <button onclick="updateStatus(${index}, 'done')" 
+                        class="text-xs text-green-600 hover:text-green-800 transition duration-150 font-semibold ${idea.status === 'done' ? 'hidden' : ''}">
+                    Mark as Done 🎉
+                </button>
+                <button onclick="deleteIdea(${index})" class="text-xs text-red-600 hover:text-red-800 transition duration-150 ml-auto">Archive/Kill 🗑️</button>
+            </div>
+        `;
+        listContainer.appendChild(ideaCard);
+    });
+    calculateAndRenderTotalScore();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ... (editIdea, handleFormSubmit, deleteIdea, exportIdeas, importIdeas harus dimasukkan di sini)
+
 
 // =======================================================
-// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.3!)
+// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.4!)
 // =======================================================
 
 // A. TAB SYSTEM & LOGIN
@@ -93,7 +187,7 @@ const checkHohoLogin = () => {
     }
 };
 
-// B. FETCH & PARSE DATA (SUPER FIX)
+// B. FETCH & PARSE DATA (MENGGUNAKAN INDEX BARU)
 const parseDate = (dateStr) => {
     const cleanedStr = dateStr.trim().replace(/[\/]/g, '-');
     const parts = cleanedStr.split('-');
@@ -101,7 +195,6 @@ const parseDate = (dateStr) => {
     if (parts.length === 3) {
         let year, month, day;
         
-        // FIX: Prioritas ke YYYY-MM-DD
         if (parts[0].length === 4) { // YYYY-MM-DD
             [year, month, day] = [parts[0], parts[1], parts[2]];
         } else if (parts[2].length === 4) { // DD-MM-YYYY
@@ -124,20 +217,22 @@ const fetchHohoSheet = async () => {
         const cleanText = text.replace(/\r/g, '').trim(); 
         const rows = cleanText.split('\n');
 
-        // Mapping Kolom (Asumsi lo: 0=Date, 1=User, 2=Role, 3=Task%, 4=TaskXP, 5=LearnXP)
+        // Mapping Kolom BARU (Berdasarkan konfirmasi lo): 
+        // 3=Date, 4=Task%, 5=TaskXP, 9=LearnXP. Asumsi 1=User, 2=Role.
         const data = rows.slice(1).map(row => {
-            // FIX: Hanya split dengan koma dan trim (lebih aman)
             const columns = row.split(',').map(col => col.replace(/"/g, '').trim());
 
-            if (columns.length < 6 || columns[1] === '') return null; 
+            // Check: Minimal ada 10 kolom (untuk index 9) dan User (index 1) tidak kosong
+            if (columns.length < 10 || columns[1] === '') return null; 
 
-            // FIX: Default ke 0 jika data kosong/NaN
-            const taskPerc = parseFloat(columns[3]) || 0;
-            const taskXP = parseInt(columns[4]) || 0;
-            const learnXP = parseInt(columns[5]) || 0;
+            // MAPPING BARU SUDAH DITERAPKAN DI SINI
+            const dateStr = columns[3] || ''; // Kolom 4 (Index 3)
+            const taskPerc = parseFloat(columns[4]) || 0; // Kolom 5 (Index 4)
+            const taskXP = parseInt(columns[5]) || 0; // Kolom 6 (Index 5)
+            const learnXP = parseInt(columns[9]) || 0; // Kolom 10 (Index 9)
 
             return {
-                date: columns[0] || '', 
+                date: dateStr, 
                 user: columns[1],
                 role: columns[2] || '-',
                 taskPerc: taskPerc, 
@@ -149,11 +244,11 @@ const fetchHohoSheet = async () => {
 
         allSheetData = data;
         
-        // DEBUGGING: Cek di Console F12 lo
+        // DEBUGGING: Lo bisa cek di Console F12 lo
         console.log("------------------------------------------");
         console.log("DEBUG: Total data rows parsed:", allSheetData.length); 
         if (allSheetData.length > 0) {
-            console.log("DEBUG: 5 Baris pertama:");
+            console.log("DEBUG: 5 Baris pertama (Cek index 3, 4, 5, 9):");
             console.table(allSheetData.slice(0, 5));
         } else {
             console.log("DEBUG: Parsing berhasil, tapi data 0. Cek CSV lo.");
@@ -173,7 +268,7 @@ const fetchHohoSheet = async () => {
 
 // C. FILTER & AGGREGATE LOGIC
 const populateUserFilter = (data) => {
-    const users = [...new Set(data.map(d => d.user))].filter(u => u !== ''); // Filter user kosong
+    const users = [...new Set(data.map(d => d.user))].filter(u => u !== '');
     const select = document.getElementById('filter-user');
     if (!select) return;
 
@@ -196,7 +291,6 @@ const processHohoData = () => {
     const filtered = allSheetData.filter(d => {
         const dDate = parseDate(d.date);
         
-        // FIX: Cek validitas tanggal dan range
         const isDateValid = !isNaN(dDate.getTime());
         const isDateMatch = isDateValid && dDate >= startDate && dDate <= endDate; 
         const isUserMatch = selectedUser === 'all' || d.user === selectedUser;
@@ -232,6 +326,7 @@ const processHohoData = () => {
 
     const leaderboard = Object.values(userStats).map(u => ({
         ...u,
+        // FIX: Perhitungan rata-rata Task % per user
         avgTaskPerc: (u.count > 0 ? (u.sumTaskPerc / u.count).toFixed(1) : 0)
     })).sort((a, b) => b.sumTotalXP - a.sumTotalXP);
 
@@ -245,6 +340,7 @@ const processHohoData = () => {
     });
     
     const trendLabels = Object.keys(dateStats).sort();
+    // FIX: Perhitungan rata-rata Task % Tim per hari (untuk Line Chart)
     const trendData = trendLabels.map(date => (dateStats[date].sumPerc / dateStats[date].count).toFixed(1));
 
     // 4. UPDATE UI
@@ -255,11 +351,11 @@ const processHohoData = () => {
 
 // D. RENDER UI COMPONENTS
 const updateSummaryCards = (leaderboard, rawData) => {
-    // Total XP
+    // Total XP (VALID)
     const grandTotalXP = leaderboard.reduce((sum, u) => sum + u.sumTotalXP, 0);
     document.getElementById('stat-total-xp').innerText = grandTotalXP.toLocaleString() + " XP";
 
-    // Avg Dopamine (dihitung dari total data point harian)
+    // Avg Dopamine (VALID: Dihitung dari semua data point harian yang terfilter)
     const totalTaskPercSum = rawData.reduce((sum, d) => sum + d.taskPerc, 0);
     const count = rawData.length;
     const grandAvgDopamine = count > 0 ? (totalTaskPercSum / count).toFixed(1) : 0;
@@ -267,7 +363,6 @@ const updateSummaryCards = (leaderboard, rawData) => {
     document.getElementById('stat-avg-dopamine').innerText = grandAvgDopamine + "%";
     document.getElementById('stat-bar-dopamine').style.width = grandAvgDopamine + "%";
 
-    // Top Performer
     const top = leaderboard[0];
     if (top) {
         document.getElementById('stat-top-user').innerText = top.user;
@@ -349,7 +444,8 @@ const renderCharts = (leaderboard, trendLabels, trendData, selectedUser) => {
 document.addEventListener('DOMContentLoaded', () => {
     loadIdeas(); 
     
-    // (Tambahkan kembali semua form handler dan expose functions FoFo lo di sini)
+    // Lo harus memastikan semua fungsi FoFo yang lo punya (editIdea, deleteIdea, dll.) di-expose di sini!
+    
     // Expose HoHo functions to window
     window.switchTab = switchTab;
     window.checkHohoLogin = checkHohoLogin;
