@@ -1,10 +1,10 @@
 // =======================================================
-// FOFo V2.6: SUPER APP (Fix Multi-Select User Filter)
+// FOFo & HOHo V2.7: SUPER APP (Gabungan FoFo V1.6 + HoHo V2.7 Multi-Select Fix)
 // =======================================================
 
 // --- CONFIGURATION ---
-// PASTE LINK CSV DARI GOOGLE SHEET LO DISINI
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
+// PASTE LINK CSV DARI GOOGLE SHEET LO DISINI (HoHo)
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI_PAKE_LINK_ASLI_LO.../pub?output=csv'; 
 const HOHO_PASSWORD = "admin"; 
 
 // --- STATE VARIABLES ---
@@ -12,13 +12,14 @@ let ideas = []; // Data FoFo
 let allSheetData = []; // Data mentah HoHo
 let chartInstanceComp = null;
 let chartInstanceTrend = null;
-let currentFilter = 'all'; 
-let currentSort = 'default';
+let currentFilter = 'all'; // FoFo Filter
+let currentSort = 'default'; // FoFo Sort
 
 // =======================================================
-// PART 1: FOFo LOGIC (IDEAS) - Full Implementasi
+// PART 1: FOFo LOGIC (IDEAS) - V1.6
 // =======================================================
-// === LOCALSTORAGE & PERSISTENCE ===
+// (Semua fungsi FoFo dari file lama lo tetap di sini: loadIdeas, saveIdeas, getNetScore, getFilteredAndSortedIdeas, filterIdeas, sortIdeas, getPriorityLabel, calculateAndRenderTotalScore, getStatusStyle, updateStatus, getActionButton, renderIdeas, editIdea, handleFormSubmit, deleteIdea, exportIdeas, importIdeas)
+
 const loadIdeas = () => {
     const storedIdeas = localStorage.getItem('fofoIdeas');
     if (storedIdeas) {
@@ -30,8 +31,6 @@ const loadIdeas = () => {
     renderIdeas(); 
 };
 const saveIdeas = () => localStorage.setItem('fofoIdeas', JSON.stringify(ideas));
-
-// === FILTER & SORT LOGIC ===
 const getNetScore = (impact, effort) => impact - effort;
 const getFilteredAndSortedIdeas = () => {
     let filteredIdeas = ideas;
@@ -68,8 +67,6 @@ const sortIdeas = (sort) => {
     currentSort = sort;
     renderIdeas();
 };
-
-// === SCORING & STATUS LOGIC ===
 const getPriorityLabel = (impact, effort) => {
     const netScore = getNetScore(impact, effort);
     let label = netScore >= 4 ? 'QUICK WIN! ⚡️' : (netScore >= 0 ? 'BIG BET 🧠' : 'TIME WASTER 🗑️');
@@ -120,7 +117,6 @@ const getActionButton = (currentStatus, index) => {
     }
 };
 
-// === RENDERING & HANDLERS ===
 const renderIdeas = () => {
     const listContainer = document.getElementById('idea-list');
     const countElement = document.getElementById('idea-count');
@@ -282,29 +278,16 @@ const importIdeas = (event) => {
 
 
 // =======================================================
-// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.6!)
+// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.7: Multi-Select)
 // =======================================================
 
 // A. TAB SYSTEM & LOGIN
-const switchTab = (tab) => {
-    document.getElementById('view-ideas').classList.toggle('hidden', tab !== 'ideas');
-    document.getElementById('view-hoho').classList.toggle('hidden', tab !== 'hoho');
-
-    const setActive = (id, isActive) => {
-        const btn = document.getElementById(id);
-        const activeClass = "px-6 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md transition-all";
-        const inactiveClass = "px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all";
-        if(btn) btn.className = isActive ? activeClass : inactiveClass;
-    };
-    
-    setActive('tab-ideas', tab === 'ideas');
-    setActive('tab-hoho', tab === 'hoho');
-};
-
 const checkHohoLogin = () => {
     if (document.getElementById('hoho-password').value === HOHO_PASSWORD) {
         document.getElementById('hoho-login').classList.add('hidden');
         document.getElementById('hoho-dashboard').classList.remove('hidden');
+        
+        // Panggil fetch data HoHo setelah login
         fetchHohoSheet();
     } else {
         alert("Password Salah!");
@@ -327,6 +310,7 @@ const parseDate = (dateStr) => {
              return new Date(dateStr); 
         }
         
+        // Month harus dikurangi 1 (0=Jan, 11=Dec)
         const date = new Date(year, month - 1, day);
         if (!isNaN(date.getTime())) return date;
     }
@@ -350,8 +334,8 @@ const fetchHohoSheet = async () => {
 
             const user = columns[1];
             
-            // Validasi User (index 1) harus string yang tidak kosong dan tidak terlihat seperti kode/formula yang rusak.
-            if (!user || user.trim() === '' || user.includes('function') || user.length > 50) return null; 
+            // Validasi User (index 1) harus string yang tidak kosong dan tidak terlihat seperti kode
+            if (!user || user.trim() === '' || user.includes('function') || user.includes('<') || user.length > 50) return null; 
 
             const dateStr = columns[3] || ''; // Kolom 4 (Index 3)
             const taskPerc = parseFloat(columns[4]) || 0; // Kolom 5 (Index 4)
@@ -371,24 +355,14 @@ const fetchHohoSheet = async () => {
 
         allSheetData = data;
         
-        console.log("------------------------------------------");
-        console.log("DEBUG: Total data rows parsed:", allSheetData.length); 
-        if (allSheetData.length > 0) {
-            console.log("DEBUG: 5 Baris pertama (Cek index 1, 3, 4, 5, 9):");
-            console.table(allSheetData.slice(0, 5));
-        } else {
-            console.log("DEBUG: Parsing berhasil, tapi data 0. Cek CSV lo.");
-        }
-        console.log("------------------------------------------");
-        
-
+        console.log("HoHo Debug: Total data rows parsed:", allSheetData.length); 
         populateUserFilter(data);
         processHohoData(); 
-        console.log("Data Dashboard Terupdate! 🚀");
+        console.log("HoHo Dashboard Data Terupdate! 🚀");
 
     } catch (err) {
         console.error("Gagal Fetch atau Parse Sheet:", err);
-        alert("Gagal ambil data Sheet. Cek 1. Link CSV di script.js 2. Sheet sudah di-Publish to Web.");
+        alert("Gagal ambil data Sheet HoHo. Cek 1. Link CSV 2. Sheet sudah di-Publish to Web.");
     }
 };
 
@@ -408,14 +382,17 @@ const populateUserFilter = (data) => {
     users.forEach(u => {
         select.innerHTML += `<option value="${u}">${u}</option>`;
     });
+    
+    // Lo bisa set user pertama terpilih sebagai default jika mau, tapi biarkan kosong (semua) lebih umum untuk multi-select.
 };
 
 const processHohoData = () => {
     const startStr = document.getElementById('filter-start-date').value;
     const endStr = document.getElementById('filter-end-date').value;
     
-    // FIX V2.6: Ambil semua user yang dipilih dari multi-select
+    // FIX V2.7: Ambil semua user yang dipilih dari multi-select
     const userSelectElement = document.getElementById('filter-user');
+    // Map options yang dipilih ke array of values (usernames)
     const selectedUsers = Array.from(userSelectElement.selectedOptions).map(option => option.value);
 
     const startDate = startStr ? parseDate(startStr) : new Date('2000-01-01');
@@ -429,13 +406,15 @@ const processHohoData = () => {
         const isDateValid = !isNaN(dDate.getTime());
         const isDateMatch = isDateValid && dDate >= startDate && dDate <= endDate; 
         
-        // FIX V2.6: Jika tidak ada user yang dipilih, tampilkan semua user. Jika ada, pastikan user ada di list yang dipilih.
+        // FIX V2.7: Jika tidak ada user yang dipilih (selectedUsers.length === 0), tampilkan semua user. 
+        // Jika ada, pastikan user (d.user) ada di list yang dipilih.
         const isUserMatch = selectedUsers.length === 0 || selectedUsers.includes(d.user);
         
         return isDateMatch && isUserMatch;
     });
 
     if (filtered.length === 0) {
+        // ... (Reset UI jika tidak ada data)
         document.getElementById('stat-total-xp').innerText = "0 XP";
         document.getElementById('stat-avg-dopamine').innerText = "0%";
         document.getElementById('stat-bar-dopamine').style.width = "0%";
@@ -480,7 +459,7 @@ const processHohoData = () => {
     // 4. UPDATE UI
     updateSummaryCards(leaderboard, filtered);
     renderLeaderboardTable(leaderboard);
-    renderCharts(leaderboard, trendLabels, trendData, selectedUsers); // Kirim selectedUsers untuk label chart
+    renderCharts(leaderboard, trendLabels, trendData, selectedUsers); 
 };
 
 // D. RENDER UI COMPONENTS
@@ -557,7 +536,7 @@ const renderCharts = (leaderboard, trendLabels, trendData, selectedUsers) => {
     const ctx2 = ctxTrend.getContext('2d');
     if (chartInstanceTrend) chartInstanceTrend.destroy();
     
-    // FIX V2.6: Update Label Chart Trend
+    // FIX V2.7: Update Label Chart Trend
     let chartLabel;
     if (selectedUsers.length === 0) {
         chartLabel = 'Rata-rata Task % Team (Semua Staff)';
@@ -587,6 +566,7 @@ const renderCharts = (leaderboard, trendLabels, trendData, selectedUsers) => {
 
 // === INIT ===
 document.addEventListener('DOMContentLoaded', () => {
+    // Load FoFo (Ideas)
     loadIdeas(); 
     
     const form = document.getElementById('idea-form');
@@ -594,13 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', handleFormSubmit); 
     }
     
-    // Expose HoHo functions to window
-    window.switchTab = switchTab;
-    window.checkHohoLogin = checkHohoLogin;
-    window.processHohoData = processHohoData;
-    window.fetchHohoSheet = fetchHohoSheet;
-    
-    // Expose FoFo functions to window
+    // Expose functions to window
     window.deleteIdea = deleteIdea;
     window.updateStatus = updateStatus;
     window.editIdea = editIdea;
@@ -609,6 +583,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.exportIdeas = exportIdeas;
     window.importIdeas = importIdeas;
     
-    // Aktifkan filter 'all' saat pertama kali dimuat
+    // Expose HoHo functions to window
+    window.checkHohoLogin = checkHohoLogin;
+    window.processHohoData = processHohoData;
+    window.fetchHohoSheet = fetchHohoSheet;
+    
+    // Aktifkan filter 'all' FoFo saat pertama kali dimuat
     filterIdeas('all'); 
 });
