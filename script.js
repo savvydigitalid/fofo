@@ -1,10 +1,10 @@
 // =======================================================
-// FOFo V2.4: SUPER APP (FoFo + HoHo Dashboard - FINAL MAPPING FIX)
+// FOFo V2.5: SUPER APP (Fix Error Parsing User)
 // =======================================================
 
 // --- CONFIGURATION ---
 // PASTE LINK CSV DARI GOOGLE SHEET LO DISINI
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI_PAKE_LINK_ASLI_LO.../pub?output=csv'; 
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
 const HOHO_PASSWORD = "admin"; 
 
 // --- STATE VARIABLES ---
@@ -18,7 +18,7 @@ let currentSort = 'default';
 // =======================================================
 // PART 1: FOFo LOGIC (IDEAS) - DARI V1.6 STABLE
 // =======================================================
-
+// === LOCALSTORAGE & PERSISTENCE ===
 const loadIdeas = () => {
     const storedIdeas = localStorage.getItem('fofoIdeas');
     if (storedIdeas) {
@@ -30,6 +30,8 @@ const loadIdeas = () => {
     renderIdeas(); 
 };
 const saveIdeas = () => localStorage.setItem('fofoIdeas', JSON.stringify(ideas));
+
+// === FILTER & SORT LOGIC ===
 const getNetScore = (impact, effort) => impact - effort;
 const getFilteredAndSortedIdeas = () => {
     let filteredIdeas = ideas;
@@ -45,21 +47,40 @@ const getFilteredAndSortedIdeas = () => {
     }
     return sortedIdeas;
 };
-
-// --- FOFo RENDERING & HANDLERS ---
-// (Fungsi FoFo lainnya seperti renderIdeas, filterIdeas, sortIdeas, handleFormSubmit, deleteIdea, updateStatus, exportIdeas, importIdeas, dll. harus dimasukkan di sini)
-
 const filterIdeas = (filter) => { 
     currentFilter = filter; 
-    // Logic filter UI (pastikan ini ada di file lo)
+    const activeClasses = ['bg-indigo-500', 'text-white', 'hover:bg-indigo-600'];
+    const inactiveClasses = ['bg-white', 'border', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-200'];
+
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        activeClasses.forEach(c => btn.classList.remove(c));
+        inactiveClasses.forEach(c => btn.classList.add(c));
+    });
+
+    const activeBtn = document.getElementById(`filter-${filter}`);
+    if (activeBtn) {
+        inactiveClasses.forEach(c => activeBtn.classList.remove(c));
+        activeClasses.forEach(c => activeBtn.classList.add(c));
+    }
     renderIdeas(); 
+};
+const sortIdeas = (sort) => {
+    currentSort = sort;
+    renderIdeas();
+};
+
+// === SCORING & STATUS LOGIC ===
+const getPriorityLabel = (impact, effort) => {
+    const netScore = getNetScore(impact, effort);
+    let label = netScore >= 4 ? 'QUICK WIN! ⚡️' : (netScore >= 0 ? 'BIG BET 🧠' : 'TIME WASTER 🗑️');
+    let color = netScore >= 4 ? 'bg-green-500' : (netScore >= 0 ? 'bg-indigo-500' : 'bg-red-500');
+    return { label, color, netScore };
 };
 const calculateAndRenderTotalScore = () => {
     const activeIdeas = ideas.filter(idea => idea.status !== 'done');
     const totalImpact = activeIdeas.reduce((sum, idea) => sum + idea.impact, 0);
     const totalEffort = activeIdeas.reduce((sum, idea) => sum + idea.effort, 0);
     const totalNetScore = totalImpact - totalEffort;
-
     const scoreElement = document.getElementById('total-score');
     if (!scoreElement) return;
 
@@ -72,12 +93,6 @@ const calculateAndRenderTotalScore = () => {
         scoreElement.className = 'text-xl font-extrabold px-3 py-1 rounded-full bg-red-500 text-white'; 
     }
 };
-const getPriorityLabel = (impact, effort) => {
-    const netScore = getNetScore(impact, effort);
-    let label = netScore >= 4 ? 'QUICK WIN! ⚡️' : (netScore >= 0 ? 'BIG BET 🧠' : 'TIME WASTER 🗑️');
-    let color = netScore >= 4 ? 'bg-green-500' : (netScore >= 0 ? 'bg-indigo-500' : 'bg-red-500');
-    return { label, color, netScore };
-};
 const getStatusStyle = (status) => {
     switch (status) {
         case 'parked': return { text: 'Parked 🅿️', color: 'bg-gray-300 text-gray-800' };
@@ -85,13 +100,6 @@ const getStatusStyle = (status) => {
         case 'building': return { text: 'Building 🔨', color: 'bg-indigo-500 text-white' };
         case 'done': return { text: 'DONE! 🎉', color: 'bg-green-600 text-white' };
         default: return { text: 'Unknown', color: 'bg-gray-200' };
-    }
-};
-const getActionButton = (currentStatus, index) => {
-    switch (currentStatus) {
-        case 'parked': return `<button onclick="updateStatus(${index}, 'validated')" class="text-xs text-yellow-600 hover:text-yellow-800 transition duration-150 font-medium">Mark as Validated ✅</button>`;
-        case 'validated': return `<button onclick="updateStatus(${index}, 'building')" class="text-xs text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium">Move to Building 🔨</button>`;
-        default: return '';
     }
 };
 const updateStatus = (index, newStatus) => {
@@ -104,7 +112,15 @@ const updateStatus = (index, newStatus) => {
         renderIdeas();
     }
 };
+const getActionButton = (currentStatus, index) => {
+    switch (currentStatus) {
+        case 'parked': return `<button onclick="updateStatus(${index}, 'validated')" class="text-xs text-yellow-600 hover:text-yellow-800 transition duration-150 font-medium">Mark as Validated ✅</button>`;
+        case 'validated': return `<button onclick="updateStatus(${index}, 'building')" class="text-xs text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium">Move to Building 🔨</button>`;
+        default: return '';
+    }
+};
 
+// === RENDERING & HANDLERS ===
 const renderIdeas = () => {
     const listContainer = document.getElementById('idea-list');
     const countElement = document.getElementById('idea-count');
@@ -153,12 +169,120 @@ const renderIdeas = () => {
     calculateAndRenderTotalScore();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+const editIdea = (index) => {
+    const idea = getFilteredAndSortedIdeas()[index];
+    let originalIndex = ideas.findIndex(i => i.title === idea.title && i.impact === idea.impact && i.effort === idea.effort);
 
-// ... (editIdea, handleFormSubmit, deleteIdea, exportIdeas, importIdeas harus dimasukkan di sini)
+    const newTitle = prompt("Edit Judul Ide:", idea.title);
+    if (newTitle !== null && newTitle.trim() === "") {
+        alert("Judul tidak boleh kosong.");
+        return;
+    }
+    
+    const newImpactStr = prompt(`Edit Skor Impact (1-5) untuk "${newTitle || idea.title}":`, idea.impact);
+    const newImpact = parseInt(newImpactStr);
+    
+    const newEffortStr = prompt(`Edit Skor Effort (1-5) untuk "${newTitle || idea.title}":`, idea.effort);
+    const newEffort = parseInt(newEffortStr);
+
+    if (isNaN(newImpact) || isNaN(newEffort) || newImpact < 1 || newImpact > 5 || newEffort < 1 || newEffort > 5) {
+        alert("Skor Impact dan Effort harus berupa angka antara 1 sampai 5.");
+        return;
+    }
+
+    if (originalIndex !== -1) {
+        ideas[originalIndex].title = newTitle.trim() || idea.title;
+        ideas[originalIndex].impact = newImpact;
+        ideas[originalIndex].effort = newEffort;
+        saveIdeas();
+        renderIdeas(); 
+    }
+};
+
+const handleFormSubmit = (event) => {
+    event.preventDefault(); 
+
+    const title = document.getElementById('title').value;
+    const impact = parseInt(document.getElementById('impact').value);
+    const effort = parseInt(document.getElementById('effort').value);
+
+    if (!title || !impact || !effort) {
+        alert('Mohon lengkapi semua field!');
+        return;
+    }
+
+    const newIdea = {
+        title: title,
+        impact: impact,
+        effort: effort,
+        status: 'parked'
+    };
+
+    ideas.unshift(newIdea); 
+    saveIdeas(); 
+    renderIdeas(); 
+    
+    document.getElementById('idea-form').reset();
+};
+
+const deleteIdea = (index) => {
+    const ideaToDelete = getFilteredAndSortedIdeas()[index];
+    const originalIndex = ideas.findIndex(i => i.title === ideaToDelete.title && i.impact === ideaToDelete.impact);
+
+    if (originalIndex !== -1 && confirm(`Yakin mau mengarsipkan/membunuh ide "${ideaToDelete.title}"?`)) {
+        ideas.splice(originalIndex, 1); 
+        saveIdeas(); 
+        renderIdeas(); 
+    }
+};
+
+const exportIdeas = () => {
+    if (ideas.length === 0) {
+        alert("Tidak ada ide untuk di-export!");
+        return;
+    }
+    const dataStr = JSON.stringify(ideas, null, 2); 
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fofo_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert("Semua data ide berhasil di-download sebagai file .json! 💾");
+};
+
+const importIdeas = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (Array.isArray(importedData) && importedData.every(item => item.title && item.impact !== undefined)) {
+                if (confirm(`Yakin ingin mengimpor ${importedData.length} ide? Data yang ada sekarang akan DITIMPA.`)) {
+                    ideas = importedData;
+                    saveIdeas();
+                    renderIdeas();
+                    alert("Data berhasil di-import! 🎉");
+                }
+            } else {
+                alert("Format file .json tidak valid untuk FoFo.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Gagal memproses file. Pastikan file JSON valid.");
+        }
+    };
+    reader.readAsText(file);
+};
 
 
 // =======================================================
-// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.4!)
+// PART 2: HOHO DASHBOARD LOGIC (FIXED V2.5!)
 // =======================================================
 
 // A. TAB SYSTEM & LOGIN
@@ -217,15 +341,18 @@ const fetchHohoSheet = async () => {
         const cleanText = text.replace(/\r/g, '').trim(); 
         const rows = cleanText.split('\n');
 
-        // Mapping Kolom BARU (Berdasarkan konfirmasi lo): 
-        // 3=Date, 4=Task%, 5=TaskXP, 9=LearnXP. Asumsi 1=User, 2=Role.
+        // Mapping Kolom: 3=Date, 4=Task%, 5=TaskXP, 9=LearnXP. 1=User, 2=Role.
         const data = rows.slice(1).map(row => {
             const columns = row.split(',').map(col => col.replace(/"/g, '').trim());
 
-            // Check: Minimal ada 10 kolom (untuk index 9) dan User (index 1) tidak kosong
-            if (columns.length < 10 || columns[1] === '') return null; 
+            // Check: Minimal ada 10 kolom (untuk index 9)
+            if (columns.length < 10) return null; 
 
-            // MAPPING BARU SUDAH DITERAPKAN DI SINI
+            const user = columns[1];
+            
+            // FIX V2.5: Validasi User (index 1) harus string yang tidak kosong dan tidak terlihat seperti kode/formula yang rusak.
+            if (!user || user.trim() === '' || user.includes('function') || user.length > 50) return null; 
+
             const dateStr = columns[3] || ''; // Kolom 4 (Index 3)
             const taskPerc = parseFloat(columns[4]) || 0; // Kolom 5 (Index 4)
             const taskXP = parseInt(columns[5]) || 0; // Kolom 6 (Index 5)
@@ -233,7 +360,7 @@ const fetchHohoSheet = async () => {
 
             return {
                 date: dateStr, 
-                user: columns[1],
+                user: user,
                 role: columns[2] || '-',
                 taskPerc: taskPerc, 
                 taskXP: taskXP,
@@ -244,11 +371,10 @@ const fetchHohoSheet = async () => {
 
         allSheetData = data;
         
-        // DEBUGGING: Lo bisa cek di Console F12 lo
         console.log("------------------------------------------");
         console.log("DEBUG: Total data rows parsed:", allSheetData.length); 
         if (allSheetData.length > 0) {
-            console.log("DEBUG: 5 Baris pertama (Cek index 3, 4, 5, 9):");
+            console.log("DEBUG: 5 Baris pertama (Cek index 1, 3, 4, 5, 9):");
             console.table(allSheetData.slice(0, 5));
         } else {
             console.log("DEBUG: Parsing berhasil, tapi data 0. Cek CSV lo.");
@@ -268,7 +394,11 @@ const fetchHohoSheet = async () => {
 
 // C. FILTER & AGGREGATE LOGIC
 const populateUserFilter = (data) => {
-    const users = [...new Set(data.map(d => d.user))].filter(u => u !== '');
+    // FIX V2.5: Menghilangkan duplikat dan membersihkan string user
+    const users = [...new Set(data.map(d => d.user))]
+        .filter(u => u && u.trim() !== '')
+        .sort((a, b) => a.localeCompare(b));
+
     const select = document.getElementById('filter-user');
     if (!select) return;
 
@@ -299,7 +429,6 @@ const processHohoData = () => {
     });
 
     if (filtered.length === 0) {
-        alert("Tidak ada data di filter ini. Cek Console (F12) untuk melihat data mentah yang terbaca.");
         document.getElementById('stat-total-xp').innerText = "0 XP";
         document.getElementById('stat-avg-dopamine').innerText = "0%";
         document.getElementById('stat-bar-dopamine').style.width = "0%";
@@ -326,7 +455,6 @@ const processHohoData = () => {
 
     const leaderboard = Object.values(userStats).map(u => ({
         ...u,
-        // FIX: Perhitungan rata-rata Task % per user
         avgTaskPerc: (u.count > 0 ? (u.sumTaskPerc / u.count).toFixed(1) : 0)
     })).sort((a, b) => b.sumTotalXP - a.sumTotalXP);
 
@@ -340,7 +468,6 @@ const processHohoData = () => {
     });
     
     const trendLabels = Object.keys(dateStats).sort();
-    // FIX: Perhitungan rata-rata Task % Tim per hari (untuk Line Chart)
     const trendData = trendLabels.map(date => (dateStats[date].sumPerc / dateStats[date].count).toFixed(1));
 
     // 4. UPDATE UI
@@ -351,11 +478,9 @@ const processHohoData = () => {
 
 // D. RENDER UI COMPONENTS
 const updateSummaryCards = (leaderboard, rawData) => {
-    // Total XP (VALID)
     const grandTotalXP = leaderboard.reduce((sum, u) => sum + u.sumTotalXP, 0);
     document.getElementById('stat-total-xp').innerText = grandTotalXP.toLocaleString() + " XP";
 
-    // Avg Dopamine (VALID: Dihitung dari semua data point harian yang terfilter)
     const totalTaskPercSum = rawData.reduce((sum, d) => sum + d.taskPerc, 0);
     const count = rawData.length;
     const grandAvgDopamine = count > 0 ? (totalTaskPercSum / count).toFixed(1) : 0;
@@ -444,13 +569,25 @@ const renderCharts = (leaderboard, trendLabels, trendData, selectedUser) => {
 document.addEventListener('DOMContentLoaded', () => {
     loadIdeas(); 
     
-    // Lo harus memastikan semua fungsi FoFo yang lo punya (editIdea, deleteIdea, dll.) di-expose di sini!
+    const form = document.getElementById('idea-form');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmit); 
+    }
     
     // Expose HoHo functions to window
     window.switchTab = switchTab;
     window.checkHohoLogin = checkHohoLogin;
     window.processHohoData = processHohoData;
     window.fetchHohoSheet = fetchHohoSheet;
+    
+    // Expose FoFo functions to window
+    window.deleteIdea = deleteIdea;
+    window.updateStatus = updateStatus;
+    window.editIdea = editIdea;
+    window.sortIdeas = sortIdeas;
+    window.filterIdeas = filterIdeas;
+    window.exportIdeas = exportIdeas;
+    window.importIdeas = importIdeas;
     
     // Aktifkan filter 'all' saat pertama kali dimuat
     filterIdeas('all'); 
