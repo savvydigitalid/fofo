@@ -243,3 +243,165 @@ const switchTab = (tab) => {
     document.getElementById('view-ideas').classList.toggle('hidden', tab !== 'ideas');
     document.getElementById('view-hoho').classList.toggle('hidden', tab !== 'hoho');
 };
+// =======================================================
+// PART 4: CUSTOM SPINNING WHEEL SYSTEM (CANVAS)
+// =======================================================
+
+let prizes = [];
+let wheelCtx = null;
+let wheelCanvas = null;
+let currentRotation = 0;
+let isSpinning = false;
+
+// Warna-warni Roda (Cyberpunk Theme)
+const wheelColors = [
+    '#ec4899', // Pink
+    '#8b5cf6', // Violet
+    '#3b82f6', // Blue
+    '#10b981', // Emerald
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+];
+
+// 1. Inisialisasi Roda dari Input
+window.initWheel = () => {
+    const input = document.getElementById('prize-input').value;
+    // Pisahkan text berdasarkan koma, lalu bersihkan spasi
+    prizes = input.split(',').map(p => p.trim()).filter(p => p !== "");
+    
+    wheelCanvas = document.getElementById('wheelCanvas');
+    if (!wheelCanvas) return;
+    
+    wheelCtx = wheelCanvas.getContext('2d');
+    drawWheel(0); // Gambar posisi awal (0 derajat)
+    document.getElementById('winner-display').innerText = "";
+};
+
+// 2. Fungsi Menggambar Roda
+const drawWheel = (rotationAngle) => {
+    if (!wheelCtx || prizes.length === 0) return;
+
+    const centerX = wheelCanvas.width / 2;
+    const centerY = wheelCanvas.height / 2;
+    const radius = wheelCanvas.width / 2 - 10; // Padding dikit
+    const sliceAngle = (2 * Math.PI) / prizes.length; // Besar sudut per slice
+
+    wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+    
+    wheelCtx.save();
+    wheelCtx.translate(centerX, centerY);
+    wheelCtx.rotate(rotationAngle); // Putar kanvas sesuai animasi
+
+    prizes.forEach((prize, i) => {
+        // Gambar Potongan Pie
+        const startAngle = i * sliceAngle;
+        const endAngle = (i + 1) * sliceAngle;
+
+        wheelCtx.beginPath();
+        wheelCtx.moveTo(0, 0);
+        wheelCtx.arc(0, 0, radius, startAngle, endAngle);
+        wheelCtx.fillStyle = wheelColors[i % wheelColors.length];
+        wheelCtx.fill();
+        wheelCtx.stroke(); // Garis pemisah
+
+        // Gambar Teks Hadiah
+        wheelCtx.save();
+        wheelCtx.rotate(startAngle + sliceAngle / 2);
+        wheelCtx.textAlign = "right";
+        wheelCtx.fillStyle = "white";
+        wheelCtx.font = "bold 14px Arial";
+        wheelCtx.fillText(prize, radius - 20, 5);
+        wheelCtx.restore();
+    });
+
+    wheelCtx.restore();
+    
+    // Gambar Lingkaran Tengah (Pemanis)
+    wheelCtx.beginPath();
+    wheelCtx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+    wheelCtx.fillStyle = "#1f2937"; // Gray-800
+    wheelCtx.fill();
+    wheelCtx.lineWidth = 4;
+    wheelCtx.strokeStyle = "#ffffff";
+    wheelCtx.stroke();
+};
+
+// 3. Logika Spin (Animasi Fisika)
+window.spinWheel = () => {
+    if (isSpinning || prizes.length === 0) return;
+    
+    // Pastikan wheel ter-init
+    if(!wheelCanvas) initWheel();
+
+    isSpinning = true;
+    document.getElementById('winner-display').innerText = "SPINNING...";
+    document.getElementById('spin-btn').disabled = true;
+    document.getElementById('spin-btn').classList.add('opacity-50');
+
+    // Random putaran: Minimal 5x putaran penuh (1800 derajat) + random offset
+    const spinDuration = 5000; // 5 detik
+    const randomOffset = Math.random() * 2 * Math.PI; // Posisi berhenti acak
+    const totalRotation = (10 * Math.PI) + randomOffset; // 5 putaran penuh + sisa
+    
+    const startTime = performance.now();
+    const startRotation = currentRotation; // Lanjut dari posisi terakhir
+
+    const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        
+        // Easing Function (Ease Out Quart): Mulai cepat, berhenti pelan
+        const easeOut = 1 - Math.pow(1 - progress, 4);
+        
+        // Hitung rotasi saat ini
+        currentRotation = startRotation + (totalRotation * easeOut);
+        
+        // Gambar ulang roda
+        drawWheel(currentRotation);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            isSpinning = false;
+            document.getElementById('spin-btn').disabled = false;
+            document.getElementById('spin-btn').classList.remove('opacity-50');
+            determineWinner(currentRotation);
+        }
+    };
+
+    requestAnimationFrame(animate);
+};
+
+// 4. Menentukan Pemenang
+const determineWinner = (finalRotation) => {
+    // Normalisasi rotasi ke 0 - 2PI (satu lingkaran)
+    const normalizedRotation = finalRotation % (2 * Math.PI);
+    
+    // Karena jarum ada di ATAS (270 derajat atau 1.5 PI dalam canvas), kita harus sesuaikan
+    // Canvas start angle (0) itu di KANAN (jam 3).
+    // Jadi kalau jarum di jam 12, kita harus hitung offsetnya.
+    
+    // Hitung sudut jarum relatif terhadap roda yang berputar
+    // Rumus: (2PI - normalizedRotation + Offset Jarum) % 2PI
+    const pointerAngle = (2 * Math.PI - normalizedRotation + (1.5 * Math.PI)) % (2 * Math.PI);
+    
+    const sliceAngle = (2 * Math.PI) / prizes.length;
+    const winningIndex = Math.floor(pointerAngle / sliceAngle);
+    
+    // Ambil nama pemenang
+    // Index kadang bisa off by 1 tergantung rotasi, kita clamp biar aman
+    const winner = prizes[winningIndex % prizes.length];
+
+    // Tampilkan Hasil
+    const display = document.getElementById('winner-display');
+    display.innerText = `🎉 ${winner} 🎉`;
+    display.classList.add('animate-bounce');
+    
+    // Dopamine Confetti (Optional: Alert dulu buat MVP)
+    setTimeout(() => alert(`Selamat! Hasilnya: ${winner}`), 100);
+};
+
+// Load Wheel saat masuk TV Mode
+// (Panggil ini di dalam fungsi initTVMode lo yang sebelumnya)
+// Tambahkan baris ini di dalam initTVMode():
+// setTimeout(initWheel, 1000); // Delay dikit biar HTML ready
