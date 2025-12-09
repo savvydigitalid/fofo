@@ -43,38 +43,67 @@
                 <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
                 <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">✨ Parkir Ide Baru</h2>
                 
-                <form id="idea-form" class="space-y-5 relative z-10">
+               <form id="idea-form" class="space-y-5 relative z-10">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                        1. Judul Ide
+                    </label>
+                    <input type="text" id="title" required 
+                           placeholder="Contoh: Bikin konten TikTok harian..." 
+                           class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 outline-none transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Judul Ide</label>
-                        <input type="text" id="title" required placeholder="Contoh: Bikin SaaS Dashboard..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 outline-none">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Impact</label>
-                            <select id="impact" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="5">5 - 🔥 Gila Cuan</option>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            2. Impact (Cuan)
+                        </label>
+                        <div class="relative">
+                            <select id="impact" required 
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 appearance-none cursor-pointer">
+                                <option value="" disabled selected hidden>Pilih Skor...</option> <option value="5">5 - 🔥 Gila Cuan</option>
                                 <option value="3">3 - 😐 Lumayan</option>
                                 <option value="1">1 - 📉 Receh</option>
                             </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Effort</label>
-                            <select id="effort" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="5">5 - 🥵 Susah</option>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            3. Effort (Usaha)
+                        </label>
+                        <div class="relative">
+                            <select id="effort" required 
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 appearance-none cursor-pointer">
+                                <option value="" disabled selected hidden>Pilih Skor...</option> <option value="5">5 - 🥵 Susah</option>
                                 <option value="3">3 - 🤔 Sedang</option>
                                 <option value="1">1 - ⚡ Gampang</option>
                             </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
                     </div>
-                    <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                        <span class="text-xs font-semibold text-indigo-600 uppercase">Prediksi:</span>
-                        <div class="flex items-center gap-3">
-                            <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
-                            <span id="score-preview-label"></span>
-                        </div>
+                </div>
+
+                <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100 animate-pulse">
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Prediksi Skor:</span>
+                    <div class="flex items-center gap-3">
+                        <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
+                        <span id="score-preview-label"></span>
                     </div>
-                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 shadow-lg hover:translate-y-0.5 transition-all">Parkir Ide Sekarang 🚀</button>
-                </form>
+                </div>
+
+                <button type="submit" 
+                        class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 text-center shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                    Parkir Ide Sekarang 🚀
+                </button>
+            </form>
             </div>
 
             <div class="flex flex-wrap gap-2 mb-6">
