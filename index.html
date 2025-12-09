@@ -43,74 +43,70 @@
                 <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
                 <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">✨ Parkir Ide Baru</h2>
                 
-               <form id="idea-form" class="space-y-5 relative z-10">
-                
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        1. Judul Ide
-                    </label>
-                    <input type="text" id="title" required 
-                           placeholder="Contoh: Bikin konten TikTok harian..." 
-                           class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 outline-none transition-all">
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    
+                <form id="idea-form" class="space-y-5 relative z-10">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                            2. Impact (Cuan)
-                        </label>
-                        <div class="relative">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">1. Judul Ide</label>
+                        <input type="text" id="title" required 
+                               placeholder="Contoh: Bikin SaaS Dashboard..." 
+                               class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 outline-none transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">2. Impact (Cuan)</label>
                             <select id="impact" required 
-                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 appearance-none cursor-pointer">
-                                <option value="" disabled selected hidden>Pilih Skor...</option> <option value="5">5 - 🔥 Gila Cuan</option>
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
+                                <option value="" disabled selected hidden>Pilih Skor...</option>
+                                <option value="5">5 - 🔥 Gila Cuan</option>
                                 <option value="3">3 - 😐 Lumayan</option>
                                 <option value="1">1 - 📉 Receh</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                            3. Effort (Usaha)
-                        </label>
-                        <div class="relative">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">3. Effort (Usaha)</label>
                             <select id="effort" required 
-                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 appearance-none cursor-pointer">
-                                <option value="" disabled selected hidden>Pilih Skor...</option> <option value="5">5 - 🥵 Susah</option>
+                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
+                                <option value="" disabled selected hidden>Pilih Skor...</option>
+                                <option value="5">5 - 🥵 Susah</option>
                                 <option value="3">3 - 🤔 Sedang</option>
                                 <option value="1">1 - ⚡ Gampang</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100 animate-pulse">
-                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Prediksi Skor:</span>
-                    <div class="flex items-center gap-3">
-                        <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
-                        <span id="score-preview-label"></span>
+                    <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <span class="text-xs font-semibold text-indigo-600 uppercase">Prediksi:</span>
+                        <div class="flex items-center gap-3">
+                            <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
+                            <span id="score-preview-label"></span>
+                        </div>
                     </div>
+
+                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 shadow-lg hover:translate-y-0.5 transition-all">
+                        Parkir Ide Sekarang 🚀
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-bold text-gray-900">Pipeline Ide</h2>
+                    <span id="idea-count" class="bg-gray-200 text-gray-700 text-xs font-bold px-2.5 py-1 rounded-md">0</span>
                 </div>
-
-                <button type="submit" 
-                        class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 text-center shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
-                    Parkir Ide Sekarang 🚀
-                </button>
-            </form>
+                <div id="total-score"></div>
             </div>
-
-            <div class="flex flex-wrap gap-2 mb-6">
-                <button onclick="filterIdeas('all')" class="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold">Semua</button>
-                <button onclick="sortIdeas('score')" class="px-3 py-1 bg-white border rounded-full text-xs font-bold">🏆 Sort Score</button>
+            
+            <div class="flex flex-wrap gap-2 mb-8">
+                <button onclick="filterIdeas('all')" id="filter-all" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">Semua</button>
+                <button onclick="filterIdeas('parked')" id="filter-parked" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🅿️ Parked</button>
+                <button onclick="filterIdeas('validated')" id="filter-validated" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">✨ Validated</button>
+                <button onclick="filterIdeas('building')" id="filter-building" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🔨 Building</button>
+                <button onclick="filterIdeas('done')" id="filter-done" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🎉 Done</button>
+                <div class="w-px h-8 bg-gray-300 mx-2"></div>
+                <button onclick="sortIdeas('score')" class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all shadow-sm">🏆 Sort Score</button>
             </div>
-            <div id="idea-list" class="space-y-4 pb-20"></div>
+            
+            <div id="idea-list" class="space-y-5 pb-20"></div>
         </div>
 
         <div id="view-hoho" class="hidden animate-fade-in">
@@ -138,9 +134,10 @@
                         </div>
                         <div class="flex flex-col gap-1 w-full md:w-1/4">
                             <label class="text-[10px] uppercase font-bold text-gray-500">Filter Username</label>
-                            <select id="filter-user" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
+                            <select multiple id="filter-user" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs h-24">
                                 <option value="all">Semua Staff</option>
-                                </select>
+                            </select>
+                            <p class="text-[9px] text-gray-400 mt-1">*Tahan Ctrl/Cmd untuk pilih banyak</p>
                         </div>
                         <div class="flex items-end w-full md:w-auto">
                             <button onclick="processHohoData()" class="w-full bg-gray-900 text-white font-bold px-6 py-2 rounded-lg hover:bg-black transition-all shadow-lg text-sm">
@@ -165,7 +162,7 @@
                     </div>
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-gray-400 text-xs font-bold uppercase mb-1">Top Performer</p>
-                        <h3 id="stat-top-user" class="text-2xl font-extrabold text-gray-900">-</h3>
+                        <h3 id="stat-top-user" class="text-xl font-extrabold text-gray-900 truncate">-</h3>
                         <p id="stat-top-role" class="text-xs text-indigo-600 font-bold bg-indigo-50 inline-block px-2 py-0.5 rounded-md mt-1">-</p>
                     </div>
                 </div>
@@ -198,8 +195,7 @@
                                     <th class="px-6 py-3 text-right">Total XP</th>
                                 </tr>
                             </thead>
-                            <tbody id="leaderboard-body">
-                                </tbody>
+                            <tbody id="leaderboard-body"></tbody>
                         </table>
                     </div>
                 </div>
