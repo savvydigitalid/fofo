@@ -1,5 +1,5 @@
 // =======================================================
-// FOFo & HOHo V2.7: SUPER APP (Fix Parkir Ide + Multi-Select)
+// FOFo & HOHo V2.8: SUPER APP (Fix Leaderboard Detail + All Staff Option)
 // =======================================================
 
 // --- CONFIGURATION ---
@@ -42,7 +42,6 @@ const getFilteredAndSortedIdeas = () => {
 
 const filterIdeas = (filter) => { 
     currentFilter = filter; 
-    // Logic highlight button sederhana
     document.querySelectorAll('[id^="filter-"]').forEach(btn => {
         if(btn.id === `filter-${filter}`) {
             btn.className = "px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold shadow-md transition-all";
@@ -147,7 +146,6 @@ const handleFormSubmit = (event) => {
     const impact = parseInt(document.getElementById('impact').value);
     const effort = parseInt(document.getElementById('effort').value);
 
-    // Validasi input
     if (!title || isNaN(impact) || isNaN(effort)) {
         alert('Mohon lengkapi Judul, Impact, dan Effort!');
         return;
@@ -217,13 +215,12 @@ const importIdeas = (event) => {
 };
 
 // =======================================================
-// PART 2: HOHO DASHBOARD LOGIC
+// PART 2: HOHO DASHBOARD LOGIC (V2.8 FIXED)
 // =======================================================
 const switchTab = (tab) => {
     document.getElementById('view-ideas').classList.toggle('hidden', tab !== 'ideas');
     document.getElementById('view-hoho').classList.toggle('hidden', tab !== 'hoho');
     
-    // Simple logic untuk tab button
     const btnIdeas = document.getElementById('tab-ideas');
     const btnHoho = document.getElementById('tab-hoho');
     
@@ -291,7 +288,8 @@ const populateUserFilter = (data) => {
     const users = [...new Set(data.map(d => d.user))].filter(u => u).sort();
     const select = document.getElementById('filter-user');
     if(select) {
-        select.innerHTML = ''; // Clear default
+        // FIX V2.8: Balikin opsi 'Semua Staff'
+        select.innerHTML = '<option value="all">Semua Staff</option>'; 
         users.forEach(u => select.innerHTML += `<option value="${u}">${u}</option>`);
     }
 };
@@ -299,8 +297,6 @@ const populateUserFilter = (data) => {
 const processHohoData = () => {
     const start = document.getElementById('filter-start-date').value;
     const end = document.getElementById('filter-end-date').value;
-    
-    // MULTI SELECT LOGIC
     const select = document.getElementById('filter-user');
     const selectedUsers = Array.from(select.selectedOptions).map(o => o.value);
 
@@ -311,8 +307,8 @@ const processHohoData = () => {
     const filtered = allSheetData.filter(d => {
         const dDate = parseDate(d.date);
         const isDateValid = !isNaN(dDate.getTime()) && dDate >= startDate && dDate <= endDate;
-        // Jika selectedUsers kosong (user gak milih apa2), anggap pilih semua.
-        const isUserMatch = selectedUsers.length === 0 || selectedUsers.includes(d.user);
+        // Logic filter: Kalo pilih "all", atau gak pilih apa2, atau user ada di list
+        const isUserMatch = selectedUsers.length === 0 || selectedUsers.includes('all') || selectedUsers.includes(d.user);
         return isDateValid && isUserMatch;
     });
 
@@ -323,16 +319,21 @@ const updateHohoUI = (data, selectedUsers) => {
     // Aggregate per User
     const userStats = {};
     data.forEach(d => {
-        if(!userStats[d.user]) userStats[d.user] = { user: d.user, role: d.role, sumXP: 0, sumPerc: 0, count: 0 };
+        if(!userStats[d.user]) userStats[d.user] = { 
+            user: d.user, role: d.role, 
+            sumXP: 0, sumPerc: 0, 
+            sumTaskXP: 0, sumLearnXP: 0, // FIX V2.8: Tambah variabel penampung
+            count: 0 
+        };
         userStats[d.user].sumXP += d.totalXP;
         userStats[d.user].sumPerc += d.taskPerc;
+        userStats[d.user].sumTaskXP += d.taskXP; // Hitung Task XP
+        userStats[d.user].sumLearnXP += d.learnXP; // Hitung Learning XP
         userStats[d.user].count++;
     });
     
     const leaderboard = Object.values(userStats).map(u => ({
-        ...u, avgPerc: (u.count > 0 ? (u.sumPerc/u.count).toFixed(1) : 0),
-        sumTaskXP: 0, // Placeholder jika butuh detail
-        sumLearnXP: 0
+        ...u, avgPerc: (u.count > 0 ? (u.sumPerc/u.count).toFixed(1) : 0)
     })).sort((a,b) => b.sumXP - a.sumXP);
 
     // Aggregate per Date (Trend)
@@ -365,7 +366,7 @@ const updateHohoUI = (data, selectedUsers) => {
     // Render Charts
     renderCharts(leaderboard.slice(0, 10), dates, trend, selectedUsers);
     
-    // Render Table
+    // Render Table (FIX V2.8: Tampilkan Task XP & Learn XP yang bener)
     const tbody = document.getElementById('leaderboard-body');
     tbody.innerHTML = '';
     leaderboard.forEach((u, i) => {
@@ -375,8 +376,8 @@ const updateHohoUI = (data, selectedUsers) => {
                 <td class="px-6 py-4 font-bold text-gray-600">${icon}</td>
                 <td class="px-6 py-4 font-medium text-gray-900">${u.user} <span class="text-xs text-gray-400 block">${u.role}</span></td>
                 <td class="px-6 py-4 text-center"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">${u.avgPerc}%</span></td>
-                <td class="px-6 py-4 text-right text-gray-600">-</td>
-                <td class="px-6 py-4 text-right text-gray-600">-</td>
+                <td class="px-6 py-4 text-right text-gray-600">${u.sumTaskXP}</td>
+                <td class="px-6 py-4 text-right text-gray-600">${u.sumLearnXP}</td>
                 <td class="px-6 py-4 text-right font-bold text-indigo-600">${u.sumXP} XP</td>
             </tr>`;
     });
@@ -396,12 +397,19 @@ const renderCharts = (topUsers, labels, data, selectedUsers) => {
 
     const ctx2 = document.getElementById('chart-trend').getContext('2d');
     if (chartInstanceTrend) chartInstanceTrend.destroy();
+    
+    // Dynamic Label
+    let label = 'Avg Team Task %';
+    if(selectedUsers.length > 0 && !selectedUsers.includes('all')) {
+        label = `Avg Task % (${selectedUsers.length} Staff)`;
+    }
+
     chartInstanceTrend = new Chart(ctx2, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: selectedUsers.length > 0 ? `Avg Task % (${selectedUsers.length} Staff)` : 'Avg Team Task %',
+                label: label,
                 data: data,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
