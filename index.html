@@ -7,16 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Transisi halus */
+        .fade-enter { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 sm:p-8 text-gray-800">
 
-    <div class="max-w-5xl mx-auto">
+    <div id="main-container" class="max-w-5xl mx-auto">
 
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">FoFo <span class="text-indigo-600">x HoHo</span></h1>
-                <p class="text-gray-500 text-sm mt-1">Idea Validator & Staff Performance Tracker</p>
+                <p class="text-gray-500 text-sm mt-1">Focus. Validate. Execute.</p>
             </div>
             
             <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200">
@@ -29,15 +34,14 @@
             </div>
         </div>
 
-        <div id="view-ideas" class="block animate-fade-in">
+        <div id="view-ideas" class="block fade-enter">
             <div class="flex justify-end mb-4">
                 <div class="flex items-center gap-2">
-                    <button onclick="exportIdeas()" class="text-xs font-bold text-gray-500 hover:text-indigo-600 underline">Backup Data (.json)</button>
+                    <button onclick="exportIdeas()" class="text-xs font-bold text-gray-500 hover:text-indigo-600 underline">Backup Data</button>
                     <span class="text-gray-300">|</span>
                     <input type="file" id="importFile" accept=".json" class="hidden" onchange="importIdeas(event)">
                     <button onclick="document.getElementById('importFile').click()" class="text-xs font-bold text-gray-500 hover:text-indigo-600 underline">Restore Data</button>
                 </div>
-            </div>
             </div>
 
             <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-indigo-100/50 border border-indigo-50 mb-10 relative overflow-hidden">
@@ -47,16 +51,12 @@
                 <form id="idea-form" class="space-y-5 relative z-10">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">1. Judul Ide</label>
-                        <input type="text" id="title" required 
-                               placeholder="Contoh: Bikin SaaS Dashboard..." 
-                               class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 outline-none transition-all">
+                        <input type="text" id="title" required placeholder="Contoh: Bikin SaaS Dashboard..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 outline-none transition-all">
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">2. Impact (Cuan)</label>
-                            <select id="impact" required 
-                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
+                            <select id="impact" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
                                 <option value="" disabled selected hidden>Pilih Skor...</option>
                                 <option value="5">5 - 🔥 Gila Cuan</option>
                                 <option value="3">3 - 😐 Lumayan</option>
@@ -65,8 +65,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">3. Effort (Usaha)</label>
-                            <select id="effort" required 
-                                    class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
+                            <select id="effort" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
                                 <option value="" disabled selected hidden>Pilih Skor...</option>
                                 <option value="5">5 - 🥵 Susah</option>
                                 <option value="3">3 - 🤔 Sedang</option>
@@ -74,7 +73,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                         <span class="text-xs font-semibold text-indigo-600 uppercase">Prediksi:</span>
                         <div class="flex items-center gap-3">
@@ -82,41 +80,28 @@
                             <span id="score-preview-label"></span>
                         </div>
                     </div>
-
-                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 shadow-lg hover:translate-y-0.5 transition-all">
-                        Parkir Ide Sekarang 🚀
-                    </button>
+                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 shadow-lg hover:translate-y-0.5 transition-all">Parkir Ide Sekarang 🚀</button>
                 </form>
             </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-xl font-bold text-gray-900">Pipeline Ide</h2>
-                    <span id="idea-count" class="bg-gray-200 text-gray-700 text-xs font-bold px-2.5 py-1 rounded-md">0</span>
-                </div>
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="filterIdeas('all')" id="filter-all" class="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold">Semua</button>
+                <button onclick="sortIdeas('score')" class="px-3 py-1 bg-white border rounded-full text-xs font-bold">🏆 Sort Score</button>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Pipeline Ide</h2>
                 <div id="total-score"></div>
             </div>
-            
-            <div class="flex flex-wrap gap-2 mb-8">
-                <button onclick="filterIdeas('all')" id="filter-all" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">Semua</button>
-                <button onclick="filterIdeas('parked')" id="filter-parked" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🅿️ Parked</button>
-                <button onclick="filterIdeas('validated')" id="filter-validated" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">✨ Validated</button>
-                <button onclick="filterIdeas('building')" id="filter-building" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🔨 Building</button>
-                <button onclick="filterIdeas('done')" id="filter-done" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all">🎉 Done</button>
-                <div class="w-px h-8 bg-gray-300 mx-2"></div>
-                <button onclick="sortIdeas('score')" class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all shadow-sm">🏆 Sort Score</button>
-            </div>
-            
-            <div id="idea-list" class="space-y-5 pb-20"></div>
+            <div id="idea-list" class="space-y-4 pb-20"></div>
         </div>
 
-        <div id="view-hoho" class="hidden animate-fade-in">
+        <div id="view-hoho" class="hidden fade-enter">
             
             <div id="hoho-login" class="max-w-sm mx-auto mt-20 text-center">
                 <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
                     <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">🔒</div>
                     <h2 class="text-xl font-bold mb-2">Restricted Access</h2>
-                    <input type="password" id="hoho-password" placeholder="Password..." class="w-full bg-gray-50 border border-gray-200 text-center text-sm rounded-xl p-3 mb-4 focus:ring-indigo-500 outline-none">
+                    <input type="password" id="hoho-password" placeholder="Password..." class="w-full bg-gray-50 border border-gray-200 text-center text-sm rounded-xl p-3 mb-4 outline-none">
                     <button onclick="checkHohoLogin()" class="w-full bg-indigo-600 text-white font-bold rounded-xl py-3 hover:bg-indigo-700 transition-all">Masuk Dashboard</button>
                 </div>
             </div>
@@ -138,9 +123,13 @@
                             <select multiple id="filter-user" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs h-24">
                                 <option value="all">Semua Staff</option>
                             </select>
-                            <p class="text-[9px] text-gray-400 mt-1">*Tahan Ctrl/Cmd untuk pilih banyak</p>
+                            <p class="text-[9px] text-gray-400 mt-1">*Tahan Ctrl untuk pilih banyak</p>
                         </div>
-                        <div class="flex items-end w-full md:w-auto">
+                        <div class="flex flex-col gap-2 w-full md:w-auto items-end">
+                            <div class="flex gap-1 mb-1">
+                                <button onclick="setFilterPreset('thisWeek')" class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold">Minggu Ini</button>
+                                <button onclick="setFilterPreset('lastWeek')" class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded font-bold">Minggu Lalu</button>
+                            </div>
                             <button onclick="processHohoData()" class="w-full bg-gray-900 text-white font-bold px-6 py-2 rounded-lg hover:bg-black transition-all shadow-lg text-sm">
                                 🔍 Terapkan Filter
                             </button>
@@ -149,13 +138,12 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-200">
+                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
                         <p class="text-indigo-100 text-xs font-bold uppercase mb-1">Total XP Team</p>
                         <h3 id="stat-total-xp" class="text-3xl font-extrabold">0 XP</h3>
-                        <p class="text-xs mt-2 opacity-80">Task XP + Learning XP</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <p class="text-gray-400 text-xs font-bold uppercase mb-1">Rata-rata Dopamine (Task %)</p>
+                        <p class="text-gray-400 text-xs font-bold uppercase mb-1">Avg Task %</p>
                         <h3 id="stat-avg-dopamine" class="text-3xl font-extrabold text-gray-900">0%</h3>
                         <div class="w-full bg-gray-100 rounded-full h-1.5 mt-3">
                             <div id="stat-bar-dopamine" class="bg-green-500 h-1.5 rounded-full" style="width: 0%"></div>
@@ -170,81 +158,40 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="font-bold text-gray-800 mb-4">⚔️ Perbandingan Staff (Total XP)</h3>
+                        <h3 class="font-bold text-gray-800 mb-4">Comparison</h3>
                         <canvas id="chart-comparison"></canvas>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="font-bold text-gray-800 mb-4">📈 Tren Dopamine Harian</h3>
+                        <h3 class="font-bold text-gray-800 mb-4">Trend Harian</h3>
                         <canvas id="chart-trend"></canvas>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800">🏆 Leaderboard Detail</h3>
-                        <button onclick="fetchHohoSheet()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-lg font-bold text-gray-600 transition-colors">🔄 Refresh Data</button>
-                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3">Rank</th>
-                                    <th class="px-6 py-3">Staff / Role</th>
-                                    <th class="px-6 py-3 text-center">Avg Task %</th>
+                                    <th class="px-6 py-3">Staff</th>
+                                    <th class="px-6 py-3 text-center">Avg %</th>
                                     <th class="px-6 py-3 text-right">Task XP</th>
-                                    <th class="px-6 py-3 text-right">Learning XP</th>
-                                    <th class="px-6 py-3 text-right">Total XP</th>
+                                    <th class="px-6 py-3 text-right">Learn XP</th>
+                                    <th class="px-6 py-3 text-right">Total</th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboard-body"></tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
-
     </div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div class="lg:col-span-1 space-y-6">
-                
-                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-                    <label class="text-xs text-gray-400 uppercase font-bold mb-2 block">Isi Hadiah (Pisahkan Koma)</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="prize-input" value="Bonus 500rb,Cuti 1 Hari,Traktir Kopi,Zonk,Voucher MAP,Pulang Cepat" 
-                               class="w-full bg-gray-900 text-white text-sm border border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-pink-500 outline-none">
-                        <button onclick="initWheel()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-bold">
-                            Load
-                        </button>
-                    </div>
-                </div>
 
-                <div class="bg-gray-800 rounded-3xl p-4 border border-gray-700 shadow-2xl relative flex flex-col items-center justify-center min-h-[400px]">
-                    <h2 class="text-xl font-bold text-pink-500 mb-4 uppercase tracking-widest">🎁 PRIZE WHEEL</h2>
-                    
-                    <div class="absolute top-[70px] z-10 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-white drop-shadow-lg"></div>
-
-                    <canvas id="wheelCanvas" width="300" height="300" class="transition-transform duration-[5000ms] ease-out"></canvas>
-
-                    <button onclick="spinWheel()" id="spin-btn" class="mt-6 bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 transform transition-all text-white font-black py-3 px-10 rounded-full shadow-lg text-xl tracking-widest border-4 border-gray-900">
-                        SPIN!
-                    </button>
-
-                    <div id="winner-display" class="mt-4 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 h-8"></div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl h-full">
-                    <h2 class="text-xl font-bold text-green-400 mb-6 uppercase tracking-widest">Live Squad Status</h2>
-                    <div id="tv-list-container" class="space-y-4 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
-                        </div>
-                </div>
-            </div>
-
+    <div id="view-staff-tv" class="hidden min-h-screen bg-gray-900 text-white p-6 font-mono">
+        <div class="text-center mt-20 text-2xl font-bold animate-pulse">📺 TV Mode Active... Loading Data...</div>
         </div>
-    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
