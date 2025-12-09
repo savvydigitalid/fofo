@@ -3,7 +3,7 @@
 // =======================================================
 
 // --- CONFIGURATION ---
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQABC...GANTI_INI.../pub?output=csv'; 
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
 const HOHO_PASSWORD = "admin"; 
 
 // --- STATE ---
