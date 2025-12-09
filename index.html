@@ -204,45 +204,40 @@
         </div>
 
     </div>
-<div id="view-staff-tv" class="hidden min-h-screen bg-gray-900 text-white p-6 font-mono">
-        
-        <div class="flex justify-between items-center mb-10 border-b border-gray-700 pb-4">
-            <div>
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 tracking-tighter">
-                    HOHO <span class="text-white">ARENA</span>
-                </h1>
-                <p class="text-gray-400 text-sm mt-1">Real-time Performance Tracker</p>
-            </div>
-            <div class="text-right">
-                <button onclick="runGacha()" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transform hover:scale-105 transition-all animate-pulse">
-                    🎲 SPIN THE WHEEL
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl">👑</div>
-                    <h2 class="text-xl font-bold text-yellow-400 mb-6 uppercase tracking-widest">Leaderboard Kings</h2>
-                    <div id="tv-top3-container" class="space-y-4">
-                        </div>
+                
+                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+                    <label class="text-xs text-gray-400 uppercase font-bold mb-2 block">Isi Hadiah (Pisahkan Koma)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="prize-input" value="Bonus 500rb,Cuti 1 Hari,Traktir Kopi,Zonk,Voucher MAP,Pulang Cepat" 
+                               class="w-full bg-gray-900 text-white text-sm border border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-pink-500 outline-none">
+                        <button onclick="initWheel()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-bold">
+                            Load
+                        </button>
+                    </div>
                 </div>
 
-                <div id="gacha-overlay" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
-                    <h1 class="text-6xl font-bold text-white mb-8 animate-bounce">🎰 WHO IS THE WINNER?</h1>
-                    <div id="gacha-display" class="text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 mb-10">
-                        ...
-                    </div>
-                    <button onclick="closeGacha()" class="bg-gray-700 text-white px-6 py-2 rounded-lg">Close</button>
+                <div class="bg-gray-800 rounded-3xl p-4 border border-gray-700 shadow-2xl relative flex flex-col items-center justify-center min-h-[400px]">
+                    <h2 class="text-xl font-bold text-pink-500 mb-4 uppercase tracking-widest">🎁 PRIZE WHEEL</h2>
+                    
+                    <div class="absolute top-[70px] z-10 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-white drop-shadow-lg"></div>
+
+                    <canvas id="wheelCanvas" width="300" height="300" class="transition-transform duration-[5000ms] ease-out"></canvas>
+
+                    <button onclick="spinWheel()" id="spin-btn" class="mt-6 bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 transform transition-all text-white font-black py-3 px-10 rounded-full shadow-lg text-xl tracking-widest border-4 border-gray-900">
+                        SPIN!
+                    </button>
+
+                    <div id="winner-display" class="mt-4 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 h-8"></div>
                 </div>
             </div>
 
             <div class="lg:col-span-2">
-                <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
+                <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl h-full">
                     <h2 class="text-xl font-bold text-green-400 mb-6 uppercase tracking-widest">Live Squad Status</h2>
-                    <div id="tv-list-container" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                    <div id="tv-list-container" class="space-y-4 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
                         </div>
                 </div>
             </div>
