@@ -10,8 +10,8 @@ const EXCLUDED_USER = "David"; // Nama Founder (Disembunyikan di TV)
 const STAFF_PHOTOS = {
     // "Nama Staff": "Link Foto URL",
     "David": "https://ui-avatars.com/api/?name=David&background=random",
-    "Rebecca": "https://drive.google.com/file/d/1eGlkAKUzSeVlpkC_nxs2LI2DsAHTLvh9/view?usp=drive_link",
-    "Shilla Syahrani": "https://drive.google.com/file/d/1uSgrXvjHSsaChIxkWfSIQycsJ6gJebip/view?usp=sharing",
+    "Rebecca": "drive.google.com/uc?export=view&id=1eGlkAKUzSeVlpkC_nxs2LI2DsAHTLvh9",
+    "Shilla Syahrani": "drive.google.com/uc?export=view&id=1uSgrXvjHSsaChIxkWfSIQycsJ6gJebip",
     // Kalau nama gak ada disini, otomatis pake inisial
 };
 
