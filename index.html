@@ -5,95 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoFo x HoHo | Founder Super App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .fade-enter { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         /* SCROLLBAR HIDING */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ANIMASI REVEAL ONE-BY-ONE (BARU) */
-        @keyframes slideUpFade {
-            0% { opacity: 0; transform: translateY(20px) scale(0.9); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+        /* REVEAL MECHANIC CSS */
+        .mystery-card { position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .mystery-card:hover { transform: scale(1.02); }
+        
+        /* Cover (Penutup) */
+        .mystery-cover {
+            position: absolute; inset: 0; z-index: 10;
+            background: #1f2937; /* Gray-800 */
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #374151;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .reveal-item { opacity: 0; animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* State: Revealed (Pas diklik) */
+        .mystery-card.revealed .mystery-cover {
+            opacity: 0; pointer-events: none; transform: scale(1.5); filter: blur(10px);
+        }
+        
+        /* Content di dalem (Awalnya blur dikit biar gak spoiler) */
+        .mystery-content { filter: blur(5px); opacity: 0.5; transition: all 0.5s; }
+        .mystery-card.revealed .mystery-content { filter: blur(0); opacity: 1; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 sm:p-8 text-gray-800">
 
     <div id="main-container" class="max-w-5xl mx-auto">
-
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">FoFo <span class="text-indigo-600">x HoHo</span></h1>
                 <p class="text-gray-500 text-sm mt-1">Focus. Validate. Execute.</p>
             </div>
-            
             <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200">
-                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md transition-all">
-                    💡 Ide Park
-                </button>
-                <button onclick="switchTab('hoho')" id="tab-hoho" class="px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all">
-                    📊 HoHo Dashboard
-                </button>
+                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md transition-all">💡 Ide Park</button>
+                <button onclick="switchTab('hoho')" id="tab-hoho" class="px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all">📊 HoHo Dashboard</button>
             </div>
         </div>
 
-        <div id="view-ideas" class="block fade-enter">
-            <div class="flex justify-end mb-4">
-                <div class="flex items-center gap-2">
-                    <button onclick="exportIdeas()" class="text-xs font-bold text-gray-500 hover:text-indigo-600 underline">Backup Data</button>
-                    <span class="text-gray-300">|</span>
-                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importIdeas(event)">
-                    <button onclick="document.getElementById('importFile').click()" class="text-xs font-bold text-gray-500 hover:text-indigo-600 underline">Restore Data</button>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-indigo-100/50 border border-indigo-50 mb-10 relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
-                <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">✨ Parkir Ide Baru</h2>
-                
-                <form id="idea-form" class="space-y-5 relative z-10">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">1. Judul Ide</label>
-                        <input type="text" id="title" required placeholder="Contoh: Bikin SaaS Dashboard..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 outline-none">
-                    </div>
+        <div id="view-ideas" class="block">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-indigo-50 mb-10">
+                <h2 class="text-lg font-bold text-gray-900 mb-6">✨ Parkir Ide Baru</h2>
+                <form id="idea-form" class="space-y-5">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">1. Judul Ide</label><input type="text" id="title" required class="w-full border p-3 rounded-xl block"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">2. Impact (Cuan)</label>
-                            <select id="impact" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="" disabled selected hidden>Pilih Skor...</option>
-                                <option value="5">5 - 🔥 Gila Cuan</option>
-                                <option value="3">3 - 😐 Lumayan</option>
-                                <option value="1">1 - 📉 Receh</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">3. Effort (Usaha)</label>
-                            <select id="effort" required class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3.5 cursor-pointer">
-                                <option value="" disabled selected hidden>Pilih Skor...</option>
-                                <option value="5">5 - 🥵 Susah</option>
-                                <option value="3">3 - 🤔 Sedang</option>
-                                <option value="1">1 - ⚡ Gampang</option>
-                            </select>
-                        </div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">2. Impact</label><select id="impact" required class="w-full border p-3 rounded-xl"><option value="" disabled selected hidden>Pilih...</option><option value="5">5 - 🔥 Gila Cuan</option><option value="3">3 - 😐 Lumayan</option><option value="1">1 - 📉 Receh</option></select></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">3. Effort</label><select id="effort" required class="w-full border p-3 rounded-xl"><option value="" disabled selected hidden>Pilih...</option><option value="5">5 - 🥵 Susah</option><option value="3">3 - 🤔 Sedang</option><option value="1">1 - ⚡ Gampang</option></select></div>
                     </div>
-                    <div id="score-preview-container" class="hidden items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                        <span class="text-xs font-semibold text-indigo-600 uppercase">Prediksi:</span>
-                        <div class="flex items-center gap-3">
-                            <span id="score-preview-net" class="text-xs text-indigo-400 font-mono font-bold"></span>
-                            <span id="score-preview-label"></span>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full text-white bg-gray-900 hover:bg-black font-bold rounded-xl text-sm px-5 py-4 text-center shadow-lg hover:translate-y-0.5 transition-all">Parkir Ide Sekarang 🚀</button>
+                    <div id="score-preview-container" class="hidden items-center gap-3 bg-indigo-50 p-4 rounded-xl"><span class="text-xs font-bold text-indigo-600">Prediksi:</span><span id="score-preview-label"></span></div>
+                    <button type="submit" class="w-full bg-gray-900 text-white font-bold rounded-xl py-4 hover:shadow-xl transition-all">Parkir Ide 🚀</button>
                 </form>
             </div>
-
             <div class="flex flex-wrap gap-2 mb-6">
                 <button onclick="filterIdeas('all')" id="filter-all" class="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold">Semua</button>
                 <button onclick="sortIdeas('score')" class="px-3 py-1 bg-white border rounded-full text-xs font-bold">🏆 Sort Score</button>
@@ -101,132 +71,63 @@
             <div id="idea-list" class="space-y-4 pb-20"></div>
         </div>
 
-        <div id="view-hoho" class="hidden fade-enter">
-            <div id="hoho-login" class="max-w-sm mx-auto mt-20 text-center">
-                <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">🔒</div>
-                    <h2 class="text-xl font-bold mb-2">Restricted Access</h2>
-                    <input type="password" id="hoho-password" placeholder="Password..." class="w-full bg-gray-50 border border-gray-200 text-center text-sm rounded-xl p-3 mb-4 outline-none">
-                    <button onclick="checkHohoLogin()" class="w-full bg-indigo-600 text-white font-bold rounded-xl py-3 hover:bg-indigo-700 transition-all">Masuk Dashboard</button>
-                </div>
+        <div id="view-hoho" class="hidden">
+            <div id="hoho-login" class="max-w-sm mx-auto mt-20 bg-white p-8 rounded-3xl shadow-xl text-center">
+                <h2 class="text-xl font-bold mb-4">Restricted Access</h2>
+                <input type="password" id="hoho-password" placeholder="Password..." class="w-full border p-3 rounded-xl mb-4 text-center">
+                <button onclick="checkHohoLogin()" class="w-full bg-indigo-600 text-white font-bold rounded-xl py-3">Login</button>
             </div>
-
             <div id="hoho-dashboard" class="hidden space-y-6">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
-                    <div class="flex flex-col md:flex-row gap-4 w-full">
-                        <div class="flex flex-col gap-1 w-full md:w-1/4">
-                            <label class="text-[10px] uppercase font-bold text-gray-500">Dari Tanggal</label>
-                            <input type="date" id="filter-start-date" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
-                        </div>
-                        <div class="flex flex-col gap-1 w-full md:w-1/4">
-                            <label class="text-[10px] uppercase font-bold text-gray-500">Sampai Tanggal</label>
-                            <input type="date" id="filter-end-date" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
-                        </div>
-                        <div class="flex flex-col gap-1 w-full md:w-1/4">
-                            <label class="text-[10px] uppercase font-bold text-gray-500">Filter Username</label>
-                            <select multiple id="filter-user" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs h-24">
-                                <option value="all">Semua Staff</option>
-                            </select>
-                            <p class="text-[9px] text-gray-400 mt-1">*Tahan Ctrl untuk pilih banyak</p>
-                        </div>
-                        <div class="flex flex-col gap-2 w-full md:w-auto items-end">
-                            <div class="flex gap-1 mb-1">
-                                <button onclick="setFilterPreset('thisWeek')" class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold">Minggu Ini</button>
-                                <button onclick="setFilterPreset('lastWeek')" class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded font-bold">Minggu Lalu</button>
-                            </div>
-                            <button onclick="processHohoData()" class="w-full bg-gray-900 text-white font-bold px-6 py-2 rounded-lg hover:bg-black transition-all shadow-lg text-sm">
-                                🔍 Terapkan Filter
-                            </button>
-                        </div>
-                    </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex flex-col gap-1 w-full"><label class="text-[10px] font-bold">Dari</label><input type="date" id="filter-start-date" class="border p-2 rounded w-full"></div>
+                    <div class="flex flex-col gap-1 w-full"><label class="text-[10px] font-bold">Sampai</label><input type="date" id="filter-end-date" class="border p-2 rounded w-full"></div>
+                    <div class="flex flex-col gap-1 w-full"><label class="text-[10px] font-bold">User</label><select multiple id="filter-user" class="border p-2 rounded w-full h-20 text-xs"><option value="all">Semua</option></select></div>
+                    <div class="flex flex-col gap-2"><div class="flex gap-1"><button onclick="setFilterPreset('thisWeek')" class="text-[10px] bg-indigo-50 px-2 py-1 rounded">Minggu Ini</button></div><button onclick="processHohoData()" class="bg-gray-900 text-white px-6 py-2 rounded-lg font-bold text-sm">Filter</button></div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
-                        <p class="text-indigo-100 text-xs font-bold uppercase mb-1">Total XP Team</p>
-                        <h3 id="stat-total-xp" class="text-3xl font-extrabold">0 XP</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <p class="text-gray-400 text-xs font-bold uppercase mb-1">Avg Task %</p>
-                        <h3 id="stat-avg-dopamine" class="text-3xl font-extrabold text-gray-900">0%</h3>
-                        <div class="w-full bg-gray-100 rounded-full h-1.5 mt-3"><div id="stat-bar-dopamine" class="bg-green-500 h-1.5 rounded-full" style="width: 0%"></div></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <p class="text-gray-400 text-xs font-bold uppercase mb-1">Top Performer</p>
-                        <h3 id="stat-top-user" class="text-xl font-extrabold text-gray-900 truncate">-</h3>
-                        <p id="stat-top-role" class="text-xs text-indigo-600 font-bold bg-indigo-50 inline-block px-2 py-0.5 rounded-md mt-1">-</p>
-                    </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-indigo-600 text-white p-6 rounded-2xl"><p class="text-xs font-bold opacity-70">Total XP</p><h3 id="stat-total-xp" class="text-3xl font-extrabold">0 XP</h3></div>
+                    <div class="bg-white p-6 rounded-2xl border"><p class="text-xs font-bold text-gray-400">Avg Task %</p><h3 id="stat-avg-dopamine" class="text-3xl font-extrabold">0%</h3></div>
+                    <div class="bg-white p-6 rounded-2xl border"><p class="text-xs font-bold text-gray-400">Top User</p><h3 id="stat-top-user" class="text-xl font-extrabold">-</h3></div>
                 </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="font-bold text-gray-800 mb-4">Comparison</h3>
-                        <canvas id="chart-comparison"></canvas>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h3 class="font-bold text-gray-800 mb-4">Trend Harian</h3>
-                        <canvas id="chart-trend"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3">Rank</th>
-                                    <th class="px-6 py-3">Staff</th>
-                                    <th class="px-6 py-3 text-center">Avg %</th>
-                                    <th class="px-6 py-3 text-right">Task XP</th>
-                                    <th class="px-6 py-3 text-right">Learn XP</th>
-                                    <th class="px-6 py-3 text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboard-body"></tbody>
-                        </table>
-                    </div>
-                </div>
+                <div class="bg-white rounded-2xl border overflow-hidden"><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase"><tr><th class="px-6 py-3">Rank</th><th class="px-6 py-3">Staff</th><th class="px-6 py-3 text-right">Total XP</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div>
             </div>
         </div>
     </div>
 
-    <div id="view-staff-tv" class="hidden min-h-screen bg-gray-900 text-white p-6 font-mono">
-        <div class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
-            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">HOHO ARENA</h1>
-            <div class="text-right">
-                <div class="text-gray-400 text-xs">LIVE TRACKER</div>
-                <div id="tv-clock" class="text-xl font-bold"></div>
+    <div id="view-staff-tv" class="hidden min-h-screen bg-gray-900 text-white font-mono flex flex-col items-center py-10 px-4">
+        
+        <div class="text-center mb-10 animate-pulse">
+            <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 mb-2">HOHO RESULT SHOW</h1>
+            <p class="text-gray-400 tracking-widest text-sm uppercase">Weekly Performance Reveal</p>
+        </div>
+
+        <div class="w-full max-w-4xl grid grid-cols-3 gap-6 mb-12 items-end h-64" id="tv-podium-container">
+            </div>
+
+        <div class="w-full max-w-3xl space-y-3 mb-16" id="tv-list-container">
+            </div>
+
+        <div class="w-full border-t border-gray-800 pt-10 flex flex-col items-center">
+            <h2 class="text-3xl font-bold text-pink-500 mb-6 uppercase tracking-[0.2em] animate-bounce">🎁 Lucky Wheel 🎁</h2>
+            
+            <div class="relative group">
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
+                
+                <canvas id="wheelCanvas" width="500" height="500" class="cursor-pointer hover:scale-105 transition-transform duration-300"></canvas>
+                
+                <button onclick="spinWheel()" id="spin-btn" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white text-gray-900 rounded-full font-black text-xl shadow-[0_0_30px_rgba(236,72,153,0.6)] border-4 border-gray-900 z-10 hover:bg-gray-200 transition-colors">
+                    SPIN
+                </button>
+            </div>
+
+            <div id="winner-display" class="mt-8 text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-red-500 to-pink-500 h-16 text-center w-full"></div>
+            
+            <div class="mt-8 flex gap-2 opacity-30 hover:opacity-100 transition-opacity">
+                <input type="text" id="prize-input" value="Bonus 500rb,Cuti,Zonk,Traktir,Voucher" class="bg-gray-800 text-white text-xs p-2 rounded border border-gray-700 w-64">
+                <button onclick="initWheel()" class="bg-gray-700 text-white text-xs px-3 rounded">Load Prizes</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div id="tv-top3-container" class="space-y-3">
-                    </div>
-
-                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mt-6">
-                    <label class="text-xs text-gray-400 uppercase font-bold mb-2 block">Custom Prizes</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="prize-input" value="Bonus 500rb,Cuti 1 Hari,Traktir Kopi,Zonk,Voucher MAP,Pulang Cepat" 
-                               class="w-full bg-gray-900 text-white text-xs border border-gray-600 rounded p-2 focus:ring-2 focus:ring-pink-500 outline-none">
-                        <button onclick="initWheel()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-bold">Load</button>
-                    </div>
-                </div>
-
-                <div class="bg-gray-800 rounded-3xl p-4 border border-gray-700 shadow-2xl flex flex-col items-center justify-center relative min-h-[300px]">
-                    <div class="absolute top-[40px] z-10 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-white drop-shadow-lg"></div>
-                    <canvas id="wheelCanvas" width="280" height="280"></canvas>
-                    <button onclick="spinWheel()" id="spin-btn" class="mt-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 transform transition-all text-white font-black py-2 px-8 rounded-full shadow-lg text-lg tracking-widest border-2 border-gray-900">SPIN!</button>
-                    <div id="winner-display" class="mt-2 text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 h-8"></div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2 bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl h-full flex flex-col">
-                <h2 class="text-xl font-bold text-green-400 mb-6 uppercase tracking-widest">Squad Rankings (This Month)</h2>
-                <div id="tv-list-container" class="space-y-4 overflow-y-auto no-scrollbar flex-1 pr-2">
-                    </div>
-            </div>
-        </div>
     </div>
 
     <script src="script.js"></script>
