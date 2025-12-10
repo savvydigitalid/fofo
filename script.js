@@ -290,6 +290,12 @@ const renderTVDashboard = (data) => {
     const today = new Date();
     const startM = new Date(today.getFullYear(), today.getMonth(), 1);
     const f = data.filter(d => parseDate(d.date) >= startM);
+
+    // Filter Exclude David
+    const filtered = data.filter(d => 
+        parseDate(d.date) >= startM && 
+        d.user.toLowerCase() !== EXCLUDED_USER.toLowerCase()
+    );    
     
     const stats = {};
     f.forEach(d => {
