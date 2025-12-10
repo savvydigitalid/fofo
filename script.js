@@ -290,14 +290,14 @@ window.setFilterPreset = (type) => {
 const renderTVDashboard = (data) => {
     const today = new Date();
     const startM = new Date(today.getFullYear(), today.getMonth(), 1);
-    const f = data.filter(d => parseDate(d.date) >= startM);
-
+    
     // Filter Exclude David
     const filtered = data.filter(d => 
         parseDate(d.date) >= startM && 
         d.user.toLowerCase() !== EXCLUDED_USER.toLowerCase()
     );    
-    
+
+    const f = data.filter(d => parseDate(d.date) >= startM);
     const stats = {};
     f.forEach(d => {
         if(!stats[d.user]) stats[d.user] = { user: d.user, xp: 0 };
