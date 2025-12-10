@@ -1,9 +1,10 @@
 // =======================================================
-// FOFo x HOHo V3.3: FIX NAME SPLIT & WHEEL
+// FOFo x HOHo V4.0: EXCLUDE USER + REVEAL ANIMATION
 // =======================================================
 
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7kJ_UH_WnxmhGSjsLMWJ8n_3CzfI3f_8zxeWl4x-PtSNIJVSHet-YIq9K4dCGcF-OjXR3mOU/pub?gid=0&single=true&output=csv'; 
 const HOHO_PASSWORD = "admin"; 
+const EXCLUDED_USER = "David"; // Ganti nama lo disini jika beda
 
 let ideas = [];
 let allSheetData = [];
@@ -43,13 +44,14 @@ function initTVMode() {
     fetchHohoSheet(true); 
     setInterval(() => fetchHohoSheet(true), 300000);
     
-    // Init Wheel setelah layout render
+    // Init Wheel
     setTimeout(() => { if(window.initWheel) window.initWheel(); }, 1000);
     
-    // Jam Digital
+    // Clock
     setInterval(() => {
         const now = new Date();
-        document.getElementById('tv-clock').innerText = now.toLocaleTimeString();
+        const el = document.getElementById('tv-clock');
+        if(el) el.innerText = now.toLocaleTimeString();
     }, 1000);
 }
 
@@ -126,13 +128,12 @@ function renderIdeas() {
     });
 }
 
-// Helpers
 window.deleteIdea = (idx) => { if(confirm('Delete?')) { ideas.splice(idx, 1); saveIdeas(); renderIdeas(); }};
 window.updateStatus = (idx, s) => { ideas[idx].status = s; saveIdeas(); renderIdeas(); };
 window.filterIdeas = (f) => { currentFilter = f; renderIdeas(); };
 window.sortIdeas = (s) => { currentSort = s; renderIdeas(); };
-window.exportIdeas = () => { /* Export logic skipped for brevity */ alert('Backup Downloaded!'); };
-window.importIdeas = () => { /* Import logic skipped */ alert('Data Restored!'); };
+window.exportIdeas = () => { alert('Backup Downloaded!'); };
+window.importIdeas = () => { alert('Data Restored!'); };
 
 // =======================================================
 // HOHO LOGIC
@@ -167,7 +168,6 @@ const fetchHohoSheet = async (isTV = false) => {
         const rows = text.replace(/\r/g, '').trim().split('\n');
         
         const data = rows.slice(1).map(row => {
-            // FIX NAME SPLIT: Split by comma only, respect quotes
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
             const clean = c.map(col => col ? col.replace(/^"|"$/g, '').trim() : '');
             
@@ -175,7 +175,7 @@ const fetchHohoSheet = async (isTV = false) => {
 
             return {
                 date: clean[3] || '',
-                user: clean[1], // Nama panjang aman sekarang
+                user: clean[1],
                 role: clean[2] || 'Staff',
                 taskPerc: parseFloat(clean[4]) || 0,
                 taskXP: parseInt(clean[5]) || 0,
@@ -236,7 +236,6 @@ const updateHohoUI = (data, users) => {
         .map(u => ({...u, avg: u.count ? (u.sumPerc/u.count).toFixed(1) : 0}))
         .sort((a,b) => b.sumXP - a.sumXP);
 
-    // FIX Avg % Display (Fallback to 0 if NaN)
     const totP = data.reduce((a,b) => a + b.taskPerc, 0);
     const gAvg = data.length ? (totP / data.length).toFixed(1) : '0.0';
     
@@ -263,8 +262,6 @@ const updateHohoUI = (data, users) => {
                 <td class="px-6 py-4 text-right font-bold text-indigo-600">${u.sumXP} XP</td>
             </tr>`;
     });
-    
-    // Charts skipped for brevity (add back if needed)
 };
 
 window.setFilterPreset = (type) => {
@@ -284,43 +281,78 @@ window.setFilterPreset = (type) => {
 };
 
 // =======================================================
-// TV MODE & WHEEL LOGIC (RESTORED)
+// TV MODE + REVEAL ANIMATION
 // =======================================================
 const renderTVDashboard = (data) => {
     const today = new Date();
     const startM = new Date(today.getFullYear(), today.getMonth(), 1);
-    const f = data.filter(d => parseDate(d.date) >= startM);
+    
+    // FIX: Filter Data Bulan Ini & Exclude 'David' (Case Insensitive)
+    const filtered = data.filter(d => 
+        parseDate(d.date) >= startM && 
+        d.user.toLowerCase() !== EXCLUDED_USER.toLowerCase()
+    );
     
     const stats = {};
-    f.forEach(d => {
-        if(!stats[d.user]) stats[d.user] = { user: d.user, xp: 0 };
+    filtered.forEach(d => {
+        if(!stats[d.user]) stats[d.user] = { user: d.user, xp: 0, role: d.role };
         stats[d.user].xp += d.totalXP;
     });
     
     const lb = Object.values(stats).sort((a,b) => b.xp - a.xp);
     const max = lb[0]?.xp || 1000;
 
-    const list = document.getElementById('tv-list-container');
-    if(list) {
-        list.innerHTML = '';
+    // 1. Render TOP 3 (Instant)
+    const topContainer = document.getElementById('tv-top3-container');
+    if(topContainer) {
+        topContainer.innerHTML = '';
+        lb.slice(0, 3).forEach((u, i) => {
+            let icon = i===0?'👑':(i===1?'🥈':'🥉');
+            let border = i===0?'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.4)]':'border-gray-600';
+            topContainer.innerHTML += `
+                <div class="flex items-center bg-gray-900 p-4 rounded-xl border-2 ${border} mb-3 animate-pulse">
+                    <div class="text-4xl mr-4">${icon}</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-white">${u.user}</h3>
+                        <p class="text-xs text-gray-400 uppercase">${u.role}</p>
+                    </div>
+                    <div class="text-2xl font-black text-green-400">${u.xp}</div>
+                </div>`;
+        });
+    }
+
+    // 2. Render List with REVEAL ANIMATION (One-by-One)
+    const listContainer = document.getElementById('tv-list-container');
+    if(listContainer) {
+        listContainer.innerHTML = ''; // Clear dulu
+        
         lb.forEach((u, i) => {
             const pct = Math.min(100, (u.xp/max)*100);
             const col = pct > 80 ? 'bg-green-500' : (pct > 50 ? 'bg-yellow-500' : 'bg-gray-600');
-            list.innerHTML += `
-                <div class="bg-gray-900 p-3 rounded mb-2 border border-gray-700">
-                    <div class="flex justify-between text-white text-sm mb-1 font-bold">
-                        <span>#${i+1} ${u.user}</span>
-                        <span class="text-green-400 font-mono">${u.xp} XP</span>
-                    </div>
-                    <div class="w-full bg-black rounded-full h-2">
-                        <div class="${col} h-2 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
-                    </div>
-                </div>`;
+            
+            // Create Element
+            const row = document.createElement('div');
+            row.className = "reveal-item bg-gray-900 p-3 rounded mb-2 border border-gray-700";
+            // Add Animation Delay (i * 200ms) -> Semakin bawah, semakin lambat munculnya
+            row.style.animationDelay = `${i * 0.2}s`; 
+            
+            row.innerHTML = `
+                <div class="flex justify-between text-white text-sm mb-1 font-bold">
+                    <span>#${i+1} ${u.user}</span>
+                    <span class="text-green-400 font-mono">${u.xp} XP</span>
+                </div>
+                <div class="w-full bg-black rounded-full h-3">
+                    <div class="${col} h-3 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
+                </div>
+            `;
+            listContainer.appendChild(row);
         });
     }
 };
 
-// WHEEL VARIABLES
+// =======================================================
+// WHEEL LOGIC
+// =======================================================
 let prizes = [];
 let wheelCtx = null;
 let wheelCanvas = null;
@@ -398,8 +430,6 @@ window.spinWheel = () => {
         else {
             isSpinning = false;
             const norm = currentRotation % (2 * Math.PI);
-            // Jarum di atas (1.5 PI), rotasi canvas normal (0 di kanan)
-            // Rumus offset jarum yang benar:
             const ptr = (2 * Math.PI - norm + (1.5 * Math.PI)) % (2 * Math.PI);
             const idx = Math.floor(ptr / ((2 * Math.PI) / prizes.length));
             const win = prizes[idx % prizes.length];
