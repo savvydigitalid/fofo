@@ -9,7 +9,9 @@ const EXCLUDED_USER = "David";
 // --- CONFIG FOTO (Isi Link Foto di sini) ---
 const STAFF_PHOTOS = {
     "David": "https://ui-avatars.com/api/?name=David&background=random",
-    "Setyaningrum": "https://ui-avatars.com/api/?name=Setyaningrum&background=random",
+    "Rebecca": "https://drive.google.com/file/d/1eGlkAKUzSeVlpkC_nxs2LI2DsAHTLvh9/view?usp=drive_link",
+    "Shilla Syahrani": "https://drive.google.com/file/d/1uSgrXvjHSsaChIxkWfSIQycsJ6gJebip/view?usp=sharing",
+    
     // Tambahkan nama staff lain sesuai CSV: "Nama": "LinkURL",
 };
 
