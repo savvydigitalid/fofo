@@ -6,13 +6,14 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlXrKn7k
 const HOHO_PASSWORD = "admin"; 
 const EXCLUDED_USER = "David"; // Nama Founder (Disembunyikan di TV)
 
-// --- 1. CONFIG FOTO STAFF (EDIT DISINI!) ---
+// --- 1. CONFIG FOTO STAFF ---
 const STAFF_PHOTOS = {
-    // "Nama Staff": "Link Foto URL",
-    "David": "https://ui-avatars.com/api/?name=David&background=random",
-    "Rebecca": "drive.google.com/uc?export=view&id=1eGlkAKUzSeVlpkC_nxs2LI2DsAHTLvh9",
-    "Shilla Syahrani": "drive.google.com/uc?export=view&id=1uSgrXvjHSsaChIxkWfSIQycsJ6gJebip",
-    // Kalau nama gak ada disini, otomatis pake inisial
+    // Format: "Nama Sesuai Sheet": "NamaFile.jpg"
+    "Rebecca": "rebecca.png",
+    "Amelia Putri Setyaningrum": "amelia.png",
+    "Justin Tigor Hasonangan": "justin.png",
+    "Shilla Syahrani": "shilla.png",
+    "Feby Putri Susanto": "feby.png", // Pastikan nama kiri SAMA PERSIS dengan di Sheet/Leaderboard
 };
 
 // --- STATE ---
